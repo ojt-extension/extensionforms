@@ -1,0 +1,37 @@
+# .gitignore
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.Python
+env/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.pytest_cache/
+nosetests.xml
+coverage.xml
+.benchmarks/
+
+# Django
+*.log
+*.pot
+*.mo
+*.sqlite3
+db.sqlite3 # Your SQLite database file (if you were using it)
+media/ # User-uploaded media files
+static_root/ # Collected static files
+
+# IDEs
+.idea/
+.vscode/
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Sensitive settings
+extension_tracker/settings_local.py # If you create a local settings file
