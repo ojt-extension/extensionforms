@@ -1,0 +1,247 @@
+/*
+ * style.css
+ * This file contains all the common styles for the extension reports application.
+ */
+
+/* Basic Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body Styles */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #ffffff;
+    color: #000000;
+    line-height: 1.6;
+    padding: 20px;
+}
+
+/* Container for Centering Content */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Main Heading */
+h1 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    font-weight: 300;
+    letter-spacing: -0.5px;
+}
+
+h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    font-weight: 300;
+}
+
+/* Form Container Styling */
+.form-container {
+    background-color: #f8f8f8;
+    border: 1px solid #e0e0e0;
+    padding: 2rem;
+    margin-bottom: 3rem;
+    border-radius: 8px;
+}
+
+/* Form Group for Labels and Inputs */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+/* Label Styling */
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+/* Input, Select, and Textarea Styling */
+.form-input, .form-select, .form-textarea, input[type="file"] {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d0d0d0;
+    background-color: #ffffff;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: border-color 0.2s;
+    border-radius: 4px;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus, input[type="file"]:focus {
+    outline: none;
+    border-color: #666666;
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Button Styling */
+.btn {
+    background-color: #000000;
+    color: #ffffff;
+    border: none;
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.btn:hover {
+    background-color: #333333;
+}
+
+/* Messages Styling (Success/Error) */
+.messages {
+    margin-bottom: 1.5rem;
+}
+
+.message {
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid;
+    border-radius: 4px;
+}
+
+.message.success {
+    background-color: #f0f8f0;
+    border-color: #4caf50;
+    color: #2e7d32;
+}
+
+.message.error {
+    background-color: #fff5f5;
+    border-color: #f44336;
+    color: #c62828;
+}
+
+/* Table Container for Responsiveness */
+.table-container {
+    overflow-x: auto;
+}
+
+/* Table Styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+th {
+    background-color: #f0f0f0;
+    text-align: left;
+    padding: 1rem;
+    font-weight: 600;
+    border-bottom: 2px solid #000000;
+}
+
+td {
+    padding: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+tr:hover {
+    background-color: #f8f8f8;
+}
+
+.no-data {
+    text-align: center;
+    padding: 2rem;
+    color: #666666;
+    font-style: italic;
+}
+
+/* Export button container for alignment */
+.export-container {
+    text-align: right;
+    margin-bottom: 1.5rem;
+}
+
+/* Dashboard-specific styles */
+.dashboard-link {
+    display: block;
+    padding: 15px;
+    background-color: #f0f0f0;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #000;
+    border: 1px solid #e0e0e0;
+    transition: background-color 0.2s;
+}
+
+.dashboard-link:hover {
+    background-color: #e8e8e8;
+}
+
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    h1 {
+        font-size: 1.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-container {
+        padding: 1rem;
+    }
+
+    table {
+        font-size: 0.9rem;
+    }
+
+    th, td {
+        padding: 0.75rem 0.5rem;
+    }
+
+    .export-container {
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.5rem;
+    }
+    .form-input, .form-select, .form-textarea, .btn, input[type="file"] {
+        padding: 0.6rem;
+        font-size: 0.9rem;
+    }
+}
+
+.form-note {
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.curricular-item {
+    display: flex;
+    align-items: center; /* This vertically aligns the checkbox and text */
+    gap: 8px; /* Adds space between the checkbox and the label */
+    margin-bottom: 5px; /* Adds some space below each item */
+}
+
+/* You might also want to style the label to control its appearance */
+.curricular-item label {
+    margin: 0; /* Removes default label margin */
+}

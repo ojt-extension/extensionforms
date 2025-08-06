@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ExtensionPPA, MediaOutlet, ExtensionPPAFeatured
+from .models import ExtensionPPA, MediaOutlet, ExtensionPPAFeatured, Department, TechnologyStatus, CurricularOffering, Technology
 
 @admin.register(ExtensionPPA)
 class ExtensionPPAAdmin(admin.ModelAdmin):
@@ -33,3 +33,26 @@ class ExtensionPPAFeaturedAdmin(admin.ModelAdmin):
             'fields': ('remarks',)
         }),
     )
+
+# NEW ADMIN CONFIG FOR TABLE 11
+
+@admin.register(Department)
+class DepartmentAdmin(admin.ModelAdmin):
+    list_display = ['department_name']
+    search_fields = ['department_name']
+
+@admin.register(TechnologyStatus)
+class TechnologyStatusAdmin(admin.ModelAdmin):
+    list_display = ['status_name']
+
+@admin.register(CurricularOffering)
+class CurricularOfferingAdmin(admin.ModelAdmin):
+    list_display = ['offering_name', 'department']
+    list_filter = ['department']
+    search_fields = ['offering_name']
+
+@admin.register(Technology)
+class TechnologyAdmin(admin.ModelAdmin):
+    list_display = ['technology_title', 'department', 'year_developed', 'technology_status']
+    list_filter = ['department', 'year_developed', 'technology_status']
+    search_fields = ['technology_title', 'technology_generator']

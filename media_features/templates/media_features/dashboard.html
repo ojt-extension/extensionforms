@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extension Reports Dashboard</title>
+    <link rel="stylesheet" href="{% static 'media_features/style.css' %}">
+    
+</head>
+<body>
+    <div class="container">
+        <h1>CEIT Extension Activity Reports Dashboard</h1>
+        
+        <p>Welcome! Please select a form below to submit data, or export all reports.</p>
+        
+        <div style="margin-bottom: 2rem;">
+            {% if forms %}
+                <ul>
+                {% for form_info in forms %}
+                    <li>
+                        <a href="{% url form_info.url_name %}" class="dashboard-link">
+                            {{ form_info.name }}
+                        </a>
+                    </li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                <p>No forms available.</p>
+            {% endif %}
+        </div>
+
+        <hr>
+
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="{% url 'export_all_to_excel' %}" class="btn">Export All Reports to Excel</a>
+        </div>
+    </div>
+</body>
+</html>

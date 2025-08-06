@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+{% load static %}
+    
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table 10. ES Activities Features</title>
+    <link rel="stylesheet" href="{% static 'media_features/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'reports_dashboard' %}" style="text-decoration: none; color: #000;">
+            <p style="margin-bottom: 20px;">&larr; Back to Dashboard</p>
+        </a>
+        <h1>Table 10. ES Activities Features</h1>
+
+        {# Django messages display - CORRECTED BLOCK #}
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-container">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                {# PPA selection field #}
+                <div class="form-group">
+                    {{ form.extension_ppa.label_tag }}
+                    {{ form.extension_ppa }}
+                    {% if form.extension_ppa.errors %}
+                        <div class="error">{{ form.extension_ppa.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                {# New PPA name input field #}
+                <div class="form-group">
+                    {{ form.ppa_name.label_tag }}
+                    {{ form.ppa_name }}
+                    {% if form.ppa_name.errors %}
+                        <div class="error">{{ form.ppa_name.errors }}</div>
+                    {% endif %}
+                </div>
+
+                {# Media Outlet Name input field #}
+                <div class="form-group">
+                    {{ form.media_outlet_name.label_tag }}
+                    {{ form.media_outlet_name }}
+                    {% if form.media_outlet_name.errors %}
+                        <div class="error">{{ form.media_outlet_name.errors }}</div>
+                    {% endif %}
+                </div>
+
+                {# Date Featured input field #}
+                <div class="form-group">
+                    {{ form.date_featured.label_tag }}
+                    {{ form.date_featured }}
+                    {% if form.date_featured.errors %}
+                        <div class="error">{{ form.date_featured.errors }}</div>
+                    {% endif %}
+                </div>
+
+                {# Remarks textarea field #}
+                <div class="form-group">
+                    {{ form.remarks.label_tag }}
+                    {{ form.remarks }}
+                    {% if form.remarks.errors %}
+                        <div class="error">{{ form.remarks.errors }}</div>
+                    {% endif %}
+                </div>
+
+                {# Corrected file upload field #}
+                <div class="form-group">
+                    <label for="files">Upload Supporting Documents:</label>
+                    <p class="form-note">*Copy of any evidence showing the Extension PPA was featured</p>
+                    <input type="file" name="files" multiple id="files" class="form-input">
+                </div>
+
+                <button type="submit" class="btn">Submit</button>
+            </form>
+        </div>
+
+        <h2 style="margin-bottom: 1.5rem; font-weight: 300;">Existing Records</h2>
+
+        <div class="table-container">
+            {% if media_features %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Extension Program/Project/Activity</th>
+                        <th>Print, radio, online media where Extension PPA was featured</th>
+                        <th>Date Featured</th>
+                        <th>Remarks</th>
+                        <th>Documents</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for feature in media_features %}
+                    <tr>
+                        <td>{{ feature.extension_ppa.ppa_name }}</td>
+                        <td>{{ feature.media_outlet.media_outlet_name }}</td>
+                        <td>{{ feature.date_featured|date:"M d, Y" }}</td>
+                        <td>{{ feature.remarks|default:"—" }}</td>
+                        <td>
+                            {# Loop through all related documents and display links #}
+                            {% for doc in feature.supporting_documents.all %}
+                                <a href="{{ doc.file.url }}" target="_blank">File {{ forloop.counter }}</a><br>
+                            {% empty %}
+                                —
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="no-data">No media features recorded yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

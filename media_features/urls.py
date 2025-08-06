@@ -3,9 +3,20 @@
 from django.urls import path
 from . import views
 
+
+
 urlpatterns = [
-    # URL for the main form and display page
-    path('', views.media_feature_form, name='media_feature_form'),
-    # URL for exporting data to CSV
-    path('export-csv/', views.export_media_features_csv, name='export_media_features_csv'),
+    # New: This is the URL for the main dashboard listing all forms
+    path('', views.reports_dashboard, name='reports_dashboard'),
+
+    
+    path('table-10-media-features/', views.media_feature_form, name='table_10_form'),
+    path('table-11-technologies/', views.technology_commercialized_form, name='table_11_form'),
+
+    # New: This is the centralized URL for the multi-sheet Excel export
+    path('export-all/', views.export_all_to_excel, name='export_all_to_excel'),
+    path('get-curricular-offerings/<int:department_id>/', views.get_curricular_offerings, name='get_curricular_offerings'),
+    
+    
 ]
+
