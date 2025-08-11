@@ -6,10 +6,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Extension Reports Dashboard</title>
     <link rel="stylesheet" href="{% static 'media_features/style.css' %}">
-    
+    <style>
+        /* Basic styling for the logout button */
+        .logout-container {
+            text-align: right;
+            margin-bottom: 1rem;
+        }
+        .logout-button {
+            padding: 8px 16px;
+            background-color: #dc3545; /* Red color for a clear action */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
+        <div class="logout-container">
+            <a href="{% url 'coordinator_logout' %}" class="logout-button">Logout</a>
+        </div>
+
         <h1>CEIT Extension Activity Reports Dashboard</h1>
         
         <p>Welcome! Please select a form below to submit data, or export all reports.</p>
