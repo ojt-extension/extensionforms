@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
+AUTH_USER_MODEL = 'accounts.CustomUser'
 
 from pathlib import Path
 
@@ -27,12 +28,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-# Media files
-# Directory where Django will save uploaded files
-MEDIA_ROOT = BASE_DIR / 'media'
-# The URL that will be used to serve the uploaded files
+import os
 MEDIA_URL = '/media/'
-
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 # Application definition
@@ -45,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'media_features', 
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -132,3 +131,10 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+AUTHENTICATION_BACKENDS = ['accounts.backends.EmailOrUsernameModelBackend']
+
+# URL to redirect to after a successful login
+LOGIN_URL = 'coordinator_auth'
+
+# URL to redirect to after a successful logout
+LOGOUT_REDIRECT_URL = 'coordinator_auth'

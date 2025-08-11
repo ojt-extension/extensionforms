@@ -18,6 +18,7 @@ Including another URLconf
 # extension_tracker/urls.py (This is the one in your main project folder)
 
 """extension_tracker URL Configuration"""
+
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
@@ -29,11 +30,10 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # The new landing page/dashboard will be at the root URL
     path('', include('media_features.urls')),
+    path('accounts/', include('accounts.urls')), # <-- Add this line
 ]
 
 # Add this block to serve media files during development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     
-
-
