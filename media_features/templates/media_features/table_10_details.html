@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Submission Details - {{ submission.form_name }}</title>
+    <style>
+        body { font-family: sans-serif; padding: 2rem; line-height: 1.6; }
+        .container { max-width: 800px; margin: auto; padding: 2rem; border: 1px solid #ccc; border-radius: 8px; }
+        h1, h3, h4 { color: #333; }
+        hr { border: 0; height: 1px; background: #eee; margin: 1.5rem 0; }
+        .back-link { display: inline-block; margin-bottom: 1rem; text-decoration: none; color: #007bff; }
+        .back-link:hover { text-decoration: underline; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'admin_dashboard' %}" class="back-link">← Back to Admin Dashboard</a>
+        <hr>
+        
+        <h1>Submission Details</h1>
+        
+        <h3>Form: {{ submission.form_name }}</h3>
+        <p><strong>Submitted by:</strong> {{ submission.submitter.get_full_name }}</p>
+        <p><strong>Submitted on:</strong> {{ submission.submitted_at|date:"F d, Y P" }}</p>
+
+        <hr>
+
+        <h4>Form Data:</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Extension PPA</td>
+                    <td>{{ form_data.extension_ppa }}</td>
+                </tr>
+                <tr>
+                    <td>Media Outlet</td>
+                    <td>{{ form_data.media_outlet_name }}</td>
+                </tr>
+                <tr>
+                    <td>Date Featured</td>
+                    <td>{{ form_data.date_featured }}</td>
+                </tr>
+                <tr>
+                    <td>Remarks</td>
+                    <td>{{ form_data.remarks|default:"—" }}</td>
+                </tr>
+            </tbody>
+        </table>
+               {% if form_data.supporting_documents %}
+                    <h4 class="mt-8">Supporting Documents:</h4>
+                    <ul class="file-list">
+                {% for doc in form_data.supporting_documents %}
+                  <li><a href="{{ doc.url }}" target="_blank">{{ doc.name }}</a></li>
+                {% endfor %}
+</ul>
+{% else %}
+<p class="mt-4">No supporting documents uploaded.</p>
+{% endif %}
+    </div>
+</body>
+</html>

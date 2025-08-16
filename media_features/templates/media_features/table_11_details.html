@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Submission Details - {{ submission.form_name }}</title>
+    <link rel="stylesheet" href="{% static 'media_features/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'admin_dashboard' %}" class="back-link">← Back to Admin Dashboard</a>
+        <hr>
+        
+        <h1>Submission Details</h1>
+        
+        <h3>Form: {{ submission.form_name }}</h3>
+        <p><strong>Submitted by:</strong> {{ submission.submitter.get_full_name }}</p>
+        <p><strong>Submitted on:</strong> {{ submission.submitted_at|date:"F d, Y P" }}</p>
+
+        <hr>
+
+        <h4>Form Data:</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Department</td>
+                    <td>{{ form_data.department }}</td>
+                </tr>
+                <tr>
+                    <td>Technology Title</td>
+                    <td>{{ form_data.technology_title }}</td>
+                </tr>
+                <tr>
+                    <td>Year Developed</td>
+                    <td>{{ form_data.year_developed }}</td>
+                </tr>
+                <tr>
+                    <td>Technology Generator</td>
+                    <td>{{ form_data.technology_generator }}</td>
+                </tr>
+                <tr>
+                    <td>Technology Status</td>
+                    <td>{{ form_data.technology_status }}</td>
+                </tr>
+                <tr>
+                    <td>Related Curricular Offerings</td>
+                    <td>{{ form_data.curricular_offerings|join:", " }}</td>
+                </tr>
+                <tr>
+                    <td>Remarks</td>
+                    <td>{{ form_data.remarks|default:"—" }}</td>
+                </tr>
+            </tbody>
+        </table>
+               {% if form_data.supporting_documents %}
+                    <h4 class="mt-8">Supporting Documents:</h4>
+                    <ul class="file-list">
+                {% for doc in form_data.supporting_documents %}
+                  <li><a href="{{ doc.url }}" target="_blank">{{ doc.name }}</a></li>
+                {% endfor %}
+</ul>
+{% else %}
+<p class="mt-4">No supporting documents uploaded.</p>
+{% endif %}
+    </div>
+</body>
+</html>

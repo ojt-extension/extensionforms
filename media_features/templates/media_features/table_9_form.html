@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table 9. Student Involvement in ESCE</title>
+    <link rel="stylesheet" href="{% static 'media_features/style.css' %}">
+    <script src="{% static 'media_features/scripts.js' %}"></script>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'reports_dashboard' %}" style="text-decoration: none; color: #000;">
+            <p style="margin-bottom: 20px;">&larr; Back to Dashboard</p>
+        </a>
+        <h1>Table 9. Student Involvement in ESCE*</h1>
+        <p style="font-style: italic; margin-bottom: 20px;">*Extension, Social and Community Engagement</p>
+
+        {# Django messages display #}
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-container">
+            <form method="post" enctype="multipart/form-data"> 
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    {{ form.department.label_tag }}
+                    {{ form.department }}
+                </div>
+                
+                <div class="form-group">
+                    {{ form.curricular_offering.label_tag }}
+                    {{ form.curricular_offering }}
+                </div>
+                
+                <div class="form-group">
+                    {{ form.total_students_for_period.label_tag }}
+                    {{ form.total_students_for_period }}
+                </div>
+                
+                <div class="form-group">
+                    {{ form.students_involved_in_extension.label_tag }}
+                    {{ form.students_involved_in_extension }}
+                </div>
+
+                <div class="form-group">
+                    <label for="percentage_display">Percentage of Students involved in extension activities (%):</label>
+                    <input type="text" id="percentage_display" class="form-input" readonly 
+                           placeholder="Will be calculated automatically" style="background-color: #f5f5f5;">
+                </div>
+
+                <div class="form-group">
+                    {{ form.remarks.label_tag }}
+                    {{ form.remarks }}
+                </div>
+
+                <div class="form-group">
+                    <label for="files">Supporting Documents:</label>
+                    <p class="form-note">
+                        *1. List of students involved per extension activity<br>
+                        *2. Photo documentation
+                    </p>
+                    <input type="file" name="files" id="files" multiple class="form-input">
+                </div>
+
+                <button type="submit" class="btn">Submit</button>
+            </form>
+        </div>
+
+        <h2>Existing Records</h2>
+
+        <div class="table-container">
+            {% if student_involvements %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Department</th>
+                        <th>Curricular Offering</th>
+                        <th>Total Students (a)</th>
+                        <th>Students Involved (b)</th>
+                        <th>Percentage (%)</th>
+                        <th>Remarks</th>
+                        <th>Supporting Documents</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for involvement in student_involvements %}
+                    <tr>
+                        <td>{{ involvement.department.department_name }}</td>
+                        <td>{{ involvement.curricular_offering.offering_name }}</td>
+                        <td>{{ involvement.total_students_for_period }}</td>
+                        <td>{{ involvement.students_involved_in_extension }}</td>
+                        <td>{{ involvement.percentage_students_involved|floatformat:2 }}%</td>
+                        <td>{{ involvement.remarks|default:"—" }}</td>
+                        <td>
+                            {% for doc in involvement.supporting_documents.all %}
+                                <a href="{{ doc.file.url }}" target="_blank">{{ doc.file.name|cut:"supporting_documents/" }}</a>
+                                {% if not forloop.last %}, {% endif %}
+                            {% empty %}
+                                —
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="no-data">No student involvement records yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // Auto-calculate percentage when values change
+        function calculatePercentage() {
+            const totalStudents = document.getElementById('total_students').value;
+            const studentsInvolved = document.getElementById('students_involved').value;
+            const percentageDisplay = document.getElementById('percentage_display');
+            
+            if (totalStudents && studentsInvolved && totalStudents > 0) {
+                const percentage = (studentsInvolved / totalStudents) * 100;
+                percentageDisplay.value = percentage.toFixed(2) + '%';
+            } else {
+                percentageDisplay.value = '';
+            }
+        }
+
+        // Add event listeners for auto-calculation
+        document.getElementById('total_students').addEventListener('input', calculatePercentage);
+        document.getElementById('students_involved').addEventListener('input', calculatePercentage);
+
+        // Handle department change to update curricular offerings
+        document.getElementById('id_department').addEventListener('change', function() {
+            const departmentId = this.value;
+            const curricularOfferingSelect = document.getElementById('id_curricular_offering');
+            
+            // Clear current options
+            curricularOfferingSelect.innerHTML = '<option value="">---------</option>';
+            
+            if (departmentId) {
+                fetch(`/get-curricular-offerings/${departmentId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(offering => {
+                            const option = document.createElement('option');
+                            option.value = offering.curricular_offering_id;
+                            option.textContent = offering.offering_name;
+                            curricularOfferingSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+        });
+    </script>
+
+</body>
+</html>

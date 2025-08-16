@@ -1,19 +1,18 @@
-# views.py
-from django.shortcuts import render, redirect
+# media_features/views.py
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.http import HttpResponse
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
+from django.db import transaction 
+from django.contrib.auth.decorators import login_required  # <-- Import login_required
 
 from openpyxl import Workbook 
 from openpyxl.styles import Font, Alignment
 from openpyxl.utils import get_column_letter
 
-from django.db import transaction 
-
-from .forms import ExtensionPPAFeaturedForm, TechnologyForm # <-- ADD TechnologyForm
-from .models import ExtensionPPAFeatured, ExtensionPPA, MediaOutlet, SupportingDocument
-from .models import Technology, Department, CurricularOffering
-
+from .forms import ExtensionPPAFeaturedForm, TechnologyForm, StudentExtensionInvolvementForm, FacultyInvolvementForm
+from .models import ExtensionPPAFeatured, ExtensionPPA, MediaOutlet, SupportingDocument, StudentExtensionInvolvement
+from .models import Technology, Department, CurricularOffering, FormSubmission, FacultyInvolvement
+import json # Import json to handle the form_data JSONField
 # from your_app_name.models import TechnologyCommercialized # Example for Table 11
 
 def reports_dashboard(request):
@@ -21,13 +20,15 @@ def reports_dashboard(request):
     Renders the main dashboard page with links to all forms.
     """
     forms = [
+        {'name': 'Table 8: Faculty Involvement in ESCE', 'url_name': 'table_8_form'},
+        {'name': 'Table 9: Student Involvement in ESCE', 'url_name': 'table_9_form'},
         {'name': 'Table 10: ES Activities Featured Forms', 'url_name': 'table_10_form'},
-        # Add a dictionary for each of your 15 other forms here
         {'name': 'Table 11: Technologies Commercialized', 'url_name': 'table_11_form'},
+        
     ]
     return render(request, 'media_features/dashboard.html', {'forms': forms})
 
-
+@login_required
 def media_feature_form(request):
     """
     Handles the display and submission of the media feature form.
@@ -37,7 +38,6 @@ def media_feature_form(request):
         if form.is_valid():
             
             with transaction.atomic():
-                # Get the existing PPA or create a new one
                 existing_ppa = form.cleaned_data.get('extension_ppa')
                 new_ppa_name = form.cleaned_data.get('ppa_name')
                 
@@ -46,22 +46,44 @@ def media_feature_form(request):
                 else:
                     ppa_instance = existing_ppa
 
-                # Find or create the MediaOutlet object
                 media_outlet_name = form.cleaned_data.get('media_outlet_name')
                 media_outlet_instance = None
                 if media_outlet_name:
                     media_outlet_instance, created = MediaOutlet.objects.get_or_create(media_outlet_name=media_outlet_name)
                 
-                # Save the form instance and link the related objects
                 feature_instance = form.save(commit=False)
                 feature_instance.extension_ppa = ppa_instance
                 feature_instance.media_outlet = media_outlet_instance
                 feature_instance.save()
+                
+                # List to store data for the FormSubmission JSON field
+                document_data = []
 
-                # Handle multiple file uploads
                 files = request.FILES.getlist('files')
                 for file in files:
-                    SupportingDocument.objects.create(extension_ppa_featured=feature_instance, file=file)
+                    doc = SupportingDocument.objects.create(
+                        extension_ppa_featured=feature_instance, 
+                        file=file
+                    )
+                    document_data.append({
+                        'name': doc.file.name.split('/')[-1],
+                        'url': doc.file.url
+                    })
+                
+                form_data_dict = {
+                    'extension_ppa': ppa_instance.ppa_name if ppa_instance else None,
+                    'media_outlet_name': media_outlet_instance.media_outlet_name if media_outlet_instance else None,
+                    'date_featured': str(feature_instance.date_featured),
+                    'remarks': feature_instance.remarks,
+                    'supporting_documents': document_data # <-- ADDED
+                }
+                
+                FormSubmission.objects.create(
+                    submitter=request.user,
+                    form_name='Table 10: ES Activities Features',
+                    form_data=form_data_dict,
+                    form_instance_id=feature_instance.pk
+                )
             
             messages.success(request, 'Media feature record and documents added successfully!')
             return redirect('table_10_form')
@@ -78,6 +100,7 @@ def media_feature_form(request):
     }
     return render(request, 'media_features/table_10_form.html', context)
 
+@login_required
 def technology_commercialized_form(request):
     """
     Handles the display and submission of the technologies commercialized form.
@@ -87,10 +110,38 @@ def technology_commercialized_form(request):
         if form.is_valid():
             technology_instance = form.save()
             
+            # List to store data for the FormSubmission JSON field
+            document_data = []
+
             # Handle multiple file uploads
             files = request.FILES.getlist('files')
             for file in files:
-                SupportingDocument.objects.create(technology=technology_instance, file=file)
+                doc = SupportingDocument.objects.create(
+                    technology=technology_instance, 
+                    file=file
+                )
+                document_data.append({
+                    'name': doc.file.name.split('/')[-1],
+                    'url': doc.file.url
+                })
+            
+            form_data_dict = {
+                'department': technology_instance.department.department_name,
+                'technology_title': technology_instance.technology_title,
+                'year_developed': technology_instance.year_developed,
+                'technology_generator': technology_instance.technology_generator,
+                'technology_status': technology_instance.technology_status.status_name,
+                'remarks': technology_instance.remarks,
+                'curricular_offerings': [offering.offering_name for offering in technology_instance.curricular_offerings.all()],
+                'supporting_documents': document_data # <-- ADDED
+            }
+
+            FormSubmission.objects.create(
+                submitter=request.user,
+                form_name='Table 11: Technologies Commercialized',
+                form_data=form_data_dict,
+                form_instance_id=technology_instance.pk
+            )
             
             messages.success(request, 'Technology record and documents added successfully!')
             return redirect('table_11_form')
@@ -116,33 +167,94 @@ def get_curricular_offerings(request, department_id):
 
 
 # NEW: This is the main, centralized export function
-
 def export_all_to_excel(request):
+    """
+    Exports data from all specified models to a single Excel file,
+    with each model on a separate worksheet.
+    """
     workbook = Workbook()
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
     response['Content-Disposition'] = 'attachment; filename=all_extension_reports.xlsx'
 
-    # Get the base URL from the request object
+    # Get the base URL for supporting document links
     base_url = request.build_absolute_uri('/')[:-1]
 
-    # CORRECTED: Use base_url to create absolute URLs
-    ExtensionPPAFeatured.add_to_class(
-        'supporting_documents_list',
-        lambda self: ", ".join([f"{base_url}{doc.file.url}" for doc in self.supporting_documents.all()])
-    )
-    Technology.add_to_class(
-        'supporting_documents_list',
-        lambda self: ", ".join([f"{base_url}{doc.file.url}" for doc in self.supporting_documents.all()])
-    )
+    # Dynamically add methods to models for easy data retrieval
+    def get_supporting_documents(self):
+        # A utility function to retrieve supporting documents based on the related_name
+        # The related name is derived from the model name in lowercase.
+        model_name = self.__class__.__name__.lower()
+        if model_name == 'facultyinvolvement':
+            related_name = 'faculty_involvement'
+        elif model_name == 'studentextensioninvolvement':
+            related_name = 'student_involvement'
+        elif model_name == 'extensionppafeatured':
+            related_name = 'extension_ppa_featured'
+        elif model_name == 'technology':
+            related_name = 'technology'
+        
+        docs = SupportingDocument.objects.filter(**{related_name: self})
+        return ", ".join([f"{base_url}{doc.file.url}" for doc in docs])
 
-    Technology.add_to_class(
-        'curricular_offerings_list',
-        lambda self: ", ".join([offering.offering_name for offering in self.curricular_offerings.all()])
-    )
+    
 
+    def get_curricular_offerings(self):
+        return ", ".join([offering.offering_name for offering in self.curricular_offerings.all()])
+
+    FacultyInvolvement.add_to_class('supporting_documents_list', get_supporting_documents)
+    ExtensionPPAFeatured.add_to_class('supporting_documents_list', get_supporting_documents)
+    Technology.add_to_class('supporting_documents_list', get_supporting_documents)
+    Technology.add_to_class('curricular_offerings_list', get_curricular_offerings)
+    StudentExtensionInvolvement.add_to_class('supporting_documents_list', get_supporting_documents)
+
+    # Dictionary defining the tables to export and their configurations
     tables = {
+        'Table 8 - Faculty Involvement': {
+            'model': FacultyInvolvement,
+            'fields': [
+                'faculty_staff_name',
+                'academic_rank_position', 
+                'employment_status',
+                'avg_hours_per_week',
+                'total_hours_per_quarter',
+                'remarks',
+                'supporting_documents_list'
+            ],
+            'headers': [
+                'Faculty/Staff Name',
+                'Academic Rank/Position',
+                'Employment Status', 
+                'Average Hours per Week',
+                'Total Hours per Quarter',
+                'Remarks',
+                'Supporting Documents'
+            ],
+            'notes': ['', '', '', '', '', '', '*Supporting documentation for faculty involvement']
+        },
+        'Table 9 - Student Involvement': {
+            'model': StudentExtensionInvolvement,
+            'fields': [
+                'department__department_name',
+                'curricular_offering__offering_name',
+                'total_students_for_period',
+                'students_involved_in_extension',
+                'percentage_students_involved',
+                'remarks',
+                'supporting_documents_list'
+            ],
+            'headers': [
+                'Department',
+                'Curricular Offering',
+                'Total Number of Students for the period (a)',
+                'Number of Students involved in extension activities (b)',
+                'Percentage of Students involved (%)',
+                'Remarks',
+                'Supporting Documents'
+            ],
+            'notes': ['', '', '', '', '', '', '1. List of students involved per extension activity\n2. Photo documentation']
+        },
         'Table 10 - Media Features': {
             'model': ExtensionPPAFeatured,
             'fields': [
@@ -159,10 +271,7 @@ def export_all_to_excel(request):
                 'Remarks',
                 'Supporting Documents'
             ],
-            'notes': [
-                '', '', '', '',
-                '*Copy of any evidence showing the Extension PPA was featured'
-            ]
+            'notes': ['', '', '', '', '*Copy of any evidence showing the Extension PPA was featured']
         },
         'Table 11 - Technologies': {
             'model': Technology,
@@ -186,17 +295,11 @@ def export_all_to_excel(request):
                 'Remarks',
                 'Supporting Documents'
             ],
-            'notes': [
-                '', '', '', '', '', '', '',
-                '1. Photo and IEC material about the technology\n2. Documentation of deployment, commercialization, and pre-commercialization activities'
-            ]
+            'notes': ['', '', '', '', '', '', '', '1. Photo and IEC material about the technology\n2. Documentation of deployment, commercialization, and pre-commercialization activities']
         },
     }
 
-    if not tables:
-        sheet = workbook.create_sheet(title='No Data')
-        sheet['A1'] = 'No data available for export.'
-    
+    # Remove the default sheet created by openpyxl
     if 'Sheet' in workbook.sheetnames:
         workbook.remove(workbook['Sheet'])
 
@@ -208,6 +311,7 @@ def export_all_to_excel(request):
 
         sheet = workbook.create_sheet(title=sheet_name)
         
+        # Write headers and notes
         for col_num, header_text in enumerate(headers, 1):
             cell = sheet.cell(row=1, column=col_num, value=header_text)
             cell.font = Font(bold=True)
@@ -221,30 +325,33 @@ def export_all_to_excel(request):
         sheet.row_dimensions[1].height = 40
         sheet.row_dimensions[2].height = 60
         
+        # Build the queryset with optimized lookups
         queryset = model.objects.all()
-        
-        if hasattr(model, 'extension_ppa'):
+        if model == ExtensionPPAFeatured:
             queryset = queryset.select_related('extension_ppa', 'media_outlet').prefetch_related('supporting_documents')
-        if hasattr(model, 'department'):
+        elif model == Technology:
             queryset = queryset.select_related('department', 'technology_status').prefetch_related('curricular_offerings', 'supporting_documents')
-        
+        elif model == StudentExtensionInvolvement:
+            queryset = queryset.select_related('department', 'curricular_offering').prefetch_related('supporting_documents')
+
+        # Write data rows
         start_row = 3
         for record in queryset:
             row_data = []
             for field in fields:
-                if field == 'curricular_offerings_list':
-                    value = record.curricular_offerings_list()
-                elif field == 'supporting_documents_list':
-                    value = record.supporting_documents_list()
-                else:
-                    value = record
-                    for part in field.split('__'):
-                        if hasattr(value, part):
+                try:
+                    # Use the dynamically added methods for M2M and FileFields
+                    if field in ['curricular_offerings_list', 'supporting_documents_list']:
+                        value = getattr(record, field)()
+                    else:
+                        # Use split to handle lookups like department__department_name
+                        parts = field.split('__')
+                        value = record
+                        for part in parts:
                             value = getattr(value, part)
-                            if callable(value):
-                                value = value()
-                        else:
-                            value = ''
+                except (AttributeError, TypeError):
+                    value = ''  # Handle cases where a related object might be null
+                
                 row_data.append(value)
             
             for col_num, cell_value in enumerate(row_data, 1):
@@ -254,3 +361,149 @@ def export_all_to_excel(request):
 
     workbook.save(response)
     return response
+
+@login_required
+def student_involvement_form(request):
+    if request.method == 'POST':
+        form = StudentExtensionInvolvementForm(request.POST)
+        files = request.FILES.getlist('files') # Get the uploaded files
+        if form.is_valid():
+            with transaction.atomic():
+                # Save the main form instance first
+                involvement_instance = form.save()
+
+                # List to store data for the FormSubmission JSON field
+                document_data = []
+                
+                # Handle file uploads and create SupportingDocument records
+                for f in files:
+                    doc = SupportingDocument.objects.create(
+                        student_involvement=involvement_instance,
+                        file=f,
+                        submitter=request.user
+                    )
+                    # Add the document's URL and name to our list
+                    document_data.append({
+                        'name': doc.file.name.split('/')[-1], # Use split to get just the filename
+                        'url': doc.file.url
+                    })
+
+                # Create the FormSubmission record
+                FormSubmission.objects.create(
+                    submitter=request.user,
+                    form_name='Table 9: Student Involvement in ESCE',
+                    # Store a copy of the form data AND the document data
+                    form_data={
+                        'department': str(involvement_instance.department),
+                        'curricular_offering': str(involvement_instance.curricular_offering),
+                        'total_students_for_period': involvement_instance.total_students_for_period,
+                        'students_involved_in_extension': involvement_instance.students_involved_in_extension,
+                        'percentage_students_involved': involvement_instance.percentage_students_involved,
+                        'remarks': involvement_instance.remarks,
+                        'supporting_documents': document_data # <-- ADDED: list of document info
+                    },
+                    form_instance_id=involvement_instance.pk
+                )
+            
+            messages.success(request, 'Form submitted successfully!')
+            return redirect('table_9_form')
+    else:
+        form = StudentExtensionInvolvementForm()
+    
+    student_involvements = StudentExtensionInvolvement.objects.all()
+    context = {
+        'form': form,
+        'student_involvements': student_involvements
+    }
+    return render(request, 'media_features/table_9_form.html', context)
+
+
+
+def faculty_involvement_form(request):
+    """
+    Handles the display and submission of the faculty involvement form (Table 8).
+    """
+    if request.method == 'POST':
+        form = FacultyInvolvementForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    instance = form.save(commit=False)
+                    instance.submitter = request.user
+                    instance.save()
+
+                    document_data = []
+                    supporting_documents = request.FILES.getlist('files') # Changed to 'files' to match your HTML
+                    for doc_file in supporting_documents:
+                        doc = SupportingDocument.objects.create(
+                            faculty_involvement=instance,
+                            file=doc_file,
+                            submitter=request.user,
+                        )
+                        document_data.append({
+                            'name': doc.file.name.split('/')[-1],
+                            'url': doc.file.url
+                        })
+
+                    # Create FormSubmission record with the data and document list
+                    form_data_dict = {
+                        'faculty_staff_name': instance.faculty_staff_name,
+                        'academic_rank_position': instance.academic_rank_position,
+                        'employment_status': instance.employment_status,
+                        'avg_hours_per_week': float(instance.avg_hours_per_week),
+                        'total_hours_per_quarter': float(instance.total_hours_per_quarter),
+                        'remarks': instance.remarks,
+                        'supporting_documents': document_data # Now correctly includes the document list
+                    }
+                    FormSubmission.objects.create(
+                        submitter=request.user,
+                        form_name='Table 8: Faculty Involvement in ESCE',
+                        form_data=form_data_dict,
+                        form_instance_id=instance.id
+                    )
+               
+                messages.success(request, 'Faculty involvement record and documents added successfully!')
+                return redirect('table_8_form')
+
+            except Exception as e:
+                messages.error(request, f'An error occurred: {e}')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = FacultyInvolvementForm()
+
+    records = FacultyInvolvement.objects.prefetch_related('supporting_documents').all().order_by('-submitted_at')
+    context = {
+        'form': form,
+        'records': records,
+    }
+    return render(request, 'media_features/table_8_form.html', context)
+
+
+@login_required
+def faculty_involvement_details(request, submission_id):
+    submission = get_object_or_404(FormSubmission, pk=submission_id)
+    # This view no longer needs to use form_instance_id for documents
+    context = { 'submission': submission, 'form_data': submission.form_data }
+    return render(request, 'media_features/table_8_details.html', context)
+
+@login_required
+def student_involvement_details(request, submission_id):
+    submission = get_object_or_404(FormSubmission, pk=submission_id)
+    form_data = get_object_or_404(StudentExtensionInvolvement, pk=submission.form_id)
+    context = { 'submission': submission, 'form_data': form_data }
+    return render(request, 'media_features/table_9_details.html', context)
+
+@login_required
+def media_features_details(request, submission_id):
+    submission = get_object_or_404(FormSubmission, pk=submission_id)
+    form_data = get_object_or_404(ExtensionPPAFeatured, pk=submission.form_id)
+    context = { 'submission': submission, 'form_data': form_data }
+    return render(request, 'media_features/table_10_details.html', context)
+
+@login_required
+def technologies_details(request, submission_id):
+    submission = get_object_or_404(FormSubmission, pk=submission_id)
+    form_data = get_object_or_404(Technology, pk=submission.form_id)
+    context = { 'submission': submission, 'form_data': form_data }
+    return render(request, 'media_features/table_11_details.html', context)
