@@ -27,13 +27,13 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # The new landing page/dashboard will be at the root URL
-    path('', include('media_features.urls')),
+    # Make adopters_features the root of your site
+    path('', include('adopters_features.urls')),
 ]
 
-# Add this block to serve media files during development
+# Serve media files during development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    
+
 
 

@@ -45,7 +45,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'media_features', 
+    'adopters_features',
+    'crispy_forms',
+    'django.contrib.humanize',
+    "crispy_bootstrap5",
 ]
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -83,9 +90,9 @@ WSGI_APPLICATION = 'extension_tracker.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'extension_ppa_db',  # Your database name
+        'NAME': 'extension_management_db',  # Your database name
         'USER': 'postgres',              # Default PostgreSQL username
-        'PASSWORD': 'rnyangg',     # Your PostgreSQL password
+        'PASSWORD': 'jcdiokno',     # Your PostgreSQL password
         'HOST': '127.0.0.1',             # Or '127.0.0.1'
         'PORT': '5432',                  # Default PostgreSQL port
     }
@@ -132,3 +139,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Toggle this to True later when login system is ready
+LOGIN_REQUIRED = False

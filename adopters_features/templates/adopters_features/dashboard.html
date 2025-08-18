@@ -1,0 +1,89 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard - Extension Management</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{% url 'dashboard' %}">Extension Tracker</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="container py-5">
+    <div class="text-center mb-5">
+      <h1 class="fw-bold">Extension Management Dashboard</h1>
+      <p class="text-muted">Quick access to all extension-related tables</p>
+    </div>
+
+    <!-- Table Links -->
+    <div class="row g-4">
+      <!-- Table 5 -->
+      <div class="col-md-6 col-lg-3">
+        <div class="card shadow-sm h-100">
+          <div class="card-body text-center">
+            <h5 class="card-title">Table 5</h5>
+            <p class="card-text">Adopters Profile</p>
+            <a href="{% url 'table5' %}" class="btn btn-primary">Go</a>
+            <a href="{% url 'export_table5' %}" class="btn btn-outline-secondary btn-sm mt-2">Export</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table 6 -->
+      <div class="col-md-6 col-lg-3">
+        <div class="card shadow-sm h-100">
+          <div class="card-body text-center">
+            <h5 class="card-title">Table 6</h5>
+            <p class="card-text">IEC Materials</p>
+            <a href="{% url 'table6' %}" class="btn btn-primary">Go</a>
+            <a href="{% url 'export_table6' %}" class="btn btn-outline-secondary btn-sm mt-2">Export</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table 7a -->
+      <div class="col-md-6 col-lg-3">
+        <div class="card shadow-sm h-100">
+          <div class="card-body text-center">
+            <h5 class="card-title">Table 7a</h5>
+            <p class="card-text">Budget Utilization (GAA)</p>
+            <a href="{% url 'table7a' %}" class="btn btn-primary">Go</a>
+            <a href="{% url 'export_table7a' %}" class="btn btn-outline-secondary btn-sm mt-2">Export</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table 7b -->
+      <div class="col-md-6 col-lg-3">
+        <div class="card shadow-sm h-100">
+          <div class="card-body text-center">
+            <h5 class="card-title">Table 7b</h5>
+            <p class="card-text">Budget Utilization (Income)</p>
+            <a href="{% url 'table7b' %}" class="btn btn-primary">Go</a>
+            <a href="{% url 'export_table7b' %}" class="btn btn-outline-secondary btn-sm mt-2">Export</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export All Button -->
+    <div class="text-center mt-5">
+      <a href="{% url 'export_all' %}" class="btn btn-success btn-lg shadow-sm">
+        📥 Export All Tables
+      </a>
+    </div>
+  </div>
+
+  <footer class="bg-dark text-light text-center py-3 mt-5">
+    <small>&copy; {{ now|date:"Y" }} Extension Services Management</small>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
