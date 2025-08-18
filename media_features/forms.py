@@ -1,8 +1,10 @@
+#media_features/forms.py
 from django import forms
 from django.utils import timezone
-from .models import ExtensionPPAFeatured, ExtensionPPA, MediaOutlet, Technology, Department, TechnologyStatus, CurricularOffering
+from .models import ExtensionPPAFeatured, ExtensionPPA, MediaOutlet, StudentExtensionInvolvement, Technology, Department, TechnologyStatus, CurricularOffering, FacultyInvolvement
 
 
+    
 class ExtensionPPAFeaturedForm(forms.ModelForm):
     extension_ppa = forms.ModelChoiceField(
         queryset=ExtensionPPA.objects.all().order_by('ppa_name'),
@@ -121,3 +123,91 @@ class TechnologyForm(forms.ModelForm):
             instance.save()
             self.save_m2m() # This handles the Many-to-Many relationship
         return instance
+
+# Add this to your forms.py file
+class StudentExtensionInvolvementForm(forms.ModelForm):
+    class Meta:
+        model = StudentExtensionInvolvement
+        fields = [
+            'department',
+            'curricular_offering',
+            'total_students_for_period',
+            'students_involved_in_extension',
+            'remarks'
+        ]
+        widgets = {
+            'department': forms.Select(attrs={'class': 'form-select', 'id': 'id_department'}),
+            'curricular_offering': forms.Select(attrs={'class': 'form-select', 'id': 'id_curricular_offering'}),
+            'total_students_for_period': forms.NumberInput(attrs={
+                'class': 'form-input',
+                'min': '0',
+                'id': 'total_students'
+            }),
+            'students_involved_in_extension': forms.NumberInput(attrs={
+                'class': 'form-input',
+                'min': '0',
+                'id': 'students_involved'
+            }),
+            'remarks': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 3})
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Initially, show no curricular offerings
+        self.fields['curricular_offering'].queryset = CurricularOffering.objects.none()
+
+        if 'department' in self.data:
+            try:
+                department_id = int(self.data.get('department'))
+                self.fields['curricular_offering'].queryset = CurricularOffering.objects.filter(department_id=department_id).order_by('offering_name')
+            except (ValueError, TypeError):
+                pass  # invalid input from the client; ignore and fallback to empty City queryset
+        elif self.instance.pk:
+            self.fields['curricular_offering'].queryset = self.instance.department.curricular_offerings.order_by('offering_name')
+
+    def clean_students_involved_in_extension(self):
+        total_students = self.cleaned_data.get('total_students_for_period')
+        students_involved = self.cleaned_data.get('students_involved_in_extension')
+        
+        if total_students is not None and students_involved is not None:
+            if students_involved > total_students:
+                raise forms.ValidationError(
+                    "Number of students involved cannot exceed total number of students."
+                )
+        
+        return students_involved
+
+    def clean_total_students_for_period(self):
+        total_students = self.cleaned_data.get('total_students_for_period')
+        if total_students is not None and total_students <= 0:
+            raise forms.ValidationError("Total number of students must be greater than 0.")
+        return total_students
+
+class FacultyInvolvementForm(forms.ModelForm):
+    """
+    Form for Table 8: Faculty Involvement in ESCE.
+    """
+
+    class Meta:
+        model = FacultyInvolvement
+        fields = [
+            'faculty_staff_name', 'academic_rank_position', 'employment_status',
+            'avg_hours_per_week', 'total_hours_per_quarter', 'remarks'
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Apply the correct CSS classes based on field type
+        for field_name, field in self.fields.items():
+            if isinstance(field.widget, forms.TextInput):
+                field.widget.attrs.update({'class': 'form-input'})
+            elif isinstance(field.widget, forms.Select):
+                field.widget.attrs.update({'class': 'form-select'})
+            elif isinstance(field.widget, forms.Textarea):
+                field.widget.attrs.update({'class': 'form-textarea'})
+            elif isinstance(field.widget, forms.NumberInput):
+                field.widget.attrs.update({'class': 'form-input'})
+            else:
+                # Default fallback
+                field.widget.attrs.update({'class': 'form-input'})

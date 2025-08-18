@@ -6,20 +6,140 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Extension Reports Dashboard</title>
     <link rel="stylesheet" href="{% static 'media_features/style.css' %}">
-    
+    <style>
+        /* General body and layout styles for centering */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Main dashboard container */
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 40px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Header with flexbox for alignment */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .welcome-text {
+            font-size: 2em;
+            font-weight: 600;
+            color: #1a202c;
+            margin: 0;
+        }
+
+        /* New button styling for logout and export */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            display: inline-block;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background-color: #e53e3e;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c53030;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        /* Styling for the form links as buttons */
+        .form-list {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0px;
+        }
+
+        .form-list-item a {
+            display: block;
+            padding: 15px 20px;
+            background-color: #f0f4f8;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #2d3748;
+            font-weight: 500;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .form-list-item a:hover {
+            background-color: #e2e8f0;
+            border-color: #cbd5e0;
+        }
+        
+        /* Media query for responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            .dashboard-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            .welcome-text {
+                font-size: 1.5em;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>CEIT Extension Activity Reports Dashboard</h1>
-        
+        <div class="dashboard-header">
+            <h1 class="welcome-text">CEIT Extension Activity Reports Dashboard</h1>
+            <a href="{% url 'coordinator_logout' %}" class="btn btn-danger">Logout</a>
+        </div>
+
         <p>Welcome! Please select a form below to submit data, or export all reports.</p>
         
         <div style="margin-bottom: 2rem;">
             {% if forms %}
-                <ul>
+                <ul class="form-list">
                 {% for form_info in forms %}
-                    <li>
-                        <a href="{% url form_info.url_name %}" class="dashboard-link">
+                    <li class="form-list-item">
+                        <a href="{% url form_info.url_name %}">
                             {{ form_info.name }}
                         </a>
                     </li>
@@ -33,7 +153,7 @@
         <hr>
 
         <div style="text-align: center; margin-top: 2rem;">
-            <a href="{% url 'export_all_to_excel' %}" class="btn">Export All Reports to Excel</a>
+            <a href="{% url 'export_all_to_excel' %}" class="btn btn-success">Export All Reports to Excel</a>
         </div>
     </div>
 </body>

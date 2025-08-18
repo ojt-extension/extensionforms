@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Sign Up</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .active-tab-line {
+            transform: scaleX(1);
+            opacity: 1;
+        }
+        .django-form p {
+            margin-bottom: 1rem;
+        }
+        .django-form label {
+            display: block;
+            text-sm font-medium text-gray-700 mb-1;
+        }
+        .django-form input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db; /* gray-300 */
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .django-form input:focus {
+            border-color: #000;
+        }
+        .errorlist {
+            color: #ef4444; /* red-500 */
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-white flex items-center justify-center min-h-screen p-4 flex-col">
+
+    <h1 class="text-2xl font-bold text-center text-gray-900 mb-6">CEIT Extension Report Submission</h1>
+
+    {% if messages %}
+    <div class="mb-4 w-full max-w-sm">
+        {% for message in messages %}
+            <div class="px-4 py-2 rounded-lg {% if message.tags == 'success' %}bg-green-100 text-green-700{% elif message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-gray-100 text-gray-700{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="bg-white border border-gray-300 rounded-3xl overflow-hidden max-w-sm w-full mx-auto p-8">
+        
+        <div class="flex border-b border-gray-300 mb-6">
+            <button id="login-tab" class="flex-1 py-4 text-lg font-semibold text-center relative group">
+                Log In
+                <span class="absolute bottom-0 left-0 w-full h-1 bg-black transition-transform duration-300 transform scale-x-0 origin-bottom-left group-[.active-tab]:scale-x-100"></span>
+            </button>
+            <button id="signup-tab" class="flex-1 py-4 text-lg font-semibold text-center relative group">
+                Sign Up
+                <span class="absolute bottom-0 left-0 w-full h-1 bg-black transition-transform duration-300 transform scale-x-0 origin-bottom-right group-[.active-tab]:scale-x-100"></span>
+            </button>
+        </div>
+
+        <div id="forms-container" class="relative transition-[height] duration-500">
+            <form id="login-form" method="post" class="django-form">
+    {% csrf_token %}
+    {% for field in login_form %}
+        <div class="mb-4">
+            <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                {{ field.label }}
+                {% if field.field.required %}
+                    <span class="text-red-500">*</span>
+                {% endif %}
+            </label>
+            {{ field }}
+            {% if field.help_text %}
+                <small class="block text-gray-500">{{ field.help_text }}</small>
+            {% endif %}
+            {{ field.errors }}
+        </div>
+    {% endfor %}
+    <button type="submit" name="login_submit" class="w-full bg-black text-white py-3 rounded-lg font-bold text-lg hover:bg-gray-800 transition-colors duration-300">Log In</button>
+    <p class="text-center text-sm text-gray-600 mt-4">Forgot your password? <a href="#" class="text-black hover:underline">Reset it here</a></p>
+</form>
+
+<form id="signup-form" method="post" class="django-form hidden">
+    {% csrf_token %}
+    {% for field in signup_form %}
+        <div class="mb-4">
+            <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                {{ field.label }}
+                {% if field.field.required %}
+                    <span class="text-red-500">*</span>
+                {% endif %}
+            </label>
+            {{ field }}
+            {% if field.help_text %}
+                <small class="block text-gray-500">{{ field.help_text }}</small>
+            {% endif %}
+            {{ field.errors }}
+        </div>
+    {% endfor %}
+    <button type="submit" name="signup_submit" class="w-full bg-black text-white py-3 rounded-lg font-bold text-lg hover:bg-gray-800 transition-colors duration-300">Sign Up</button>
+</form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginTab = document.getElementById('login-tab');
+            const signupTab = document.getElementById('signup-tab');
+            const loginForm = document.getElementById('login-form');
+            const signupForm = document.getElementById('signup-form');
+            const formsContainer = document.getElementById('forms-container');
+
+            function setFormHeights() {
+                const loginFormHeight = loginForm.scrollHeight;
+                const signupFormHeight = signupForm.scrollHeight;
+                if (signupForm.classList.contains('hidden')) {
+                    formsContainer.style.height = `${loginFormHeight}px`;
+                } else {
+                    formsContainer.style.height = `${signupFormHeight}px`;
+                }
+            }
+            
+            const showSignup = '{{ show_signup }}' === 'True';
+            if (showSignup || signupForm.querySelector('.errorlist')) {
+                signupTab.classList.add('active-tab');
+                loginTab.classList.remove('active-tab');
+                signupForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+            } else {
+                loginTab.classList.add('active-tab');
+                signupTab.classList.remove('active-tab');
+                loginForm.classList.remove('hidden');
+                signupForm.classList.add('hidden');
+            }
+
+            setFormHeights();
+
+            loginTab.addEventListener('click', (e) => {
+                e.preventDefault();
+                loginTab.classList.add('active-tab');
+                signupTab.classList.remove('active-tab');
+                loginForm.classList.remove('hidden');
+                signupForm.classList.add('hidden');
+                setFormHeights();
+            });
+
+            signupTab.addEventListener('click', (e) => {
+                e.preventDefault();
+                signupTab.classList.add('active-tab');
+                loginTab.classList.remove('active-tab');
+                signupForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+                setFormHeights();
+            });
+        });
+    </script>
+</body>
+</html>

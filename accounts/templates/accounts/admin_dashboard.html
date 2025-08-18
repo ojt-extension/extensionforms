@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* General body and layout styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Aligns content to the top */
+            min-height: 100vh;
+        }
+
+        /* Main dashboard container to center content and control width */
+        .dashboard-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        /* Header section with flexbox for alignment */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between; /* Pushes welcome text and logout button to opposite ends */
+            align-items: center;
+            padding: 20px;
+            margin-bottom: 30px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .welcome-text {
+            font-size: 2em;
+            font-weight: 600;
+            margin: 0;
+            color: #1a202c;
+        }
+
+        /* Button styles for actions like logout and export */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background-color: #e53e3e;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c53030;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        /* Content section with flexbox for spacing */
+        .dashboard-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Card-like container for the table and other content */
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        /* Table styles */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f7fafc;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        tr:hover {
+            background-color: #edf2f7;
+        }
+
+        /* Section headers */
+        h2 {
+            color: #2d3748;
+            font-size: 1.8em;
+            margin: 0 0 20px 0;
+        }
+
+        /* Links in table */
+        td a {
+            color: #3182ce;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        td a:hover {
+            color: #2c5aa0;
+            text-decoration: underline;
+        }
+
+        /* No submissions message */
+        .no-submissions {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+            font-style: italic;
+        }
+
+        /* Utility class to visually hide elements but keep them for screen readers */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .welcome-text {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h1 class="welcome-text">Welcome, Admin!</h1>
+            <a href="{% url 'coordinator_logout' %}" class="btn btn-danger">Logout</a>
+        </div>
+
+        <div class="dashboard-content">
+            <div class="card">
+                <h2>Submitted Forms</h2>
+                
+                {% if submitted_forms %}
+                    <a href="{% url 'export_all_submissions' %}" class="btn btn-success" style="margin-bottom: 20px;">Export All Submissions to Excel</a>
+                    
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Form Name</th>
+                                    <th>Submitted By</th>
+                                    <th>Submission Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for submission in submitted_forms %}
+                                    <tr>
+                                        <td>{{ submission.form_name }}</td>
+                                        <td>{{ submission.submitter.get_full_name }}</td>
+                                        <td>{{ submission.submitted_at|date:"M d, Y P" }}</td>
+                                        <td>
+                                            <a href="{% url 'view_submission_details' submission.id %}">View Details</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="no-submissions">No forms have been submitted yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
