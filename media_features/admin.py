@@ -1,5 +1,19 @@
+#media_features\admin.py
 from django.contrib import admin
 from .models import ExtensionPPA, MediaOutlet, ExtensionPPAFeatured, Department, TechnologyStatus, CurricularOffering, Technology
+from .models import (
+    Training,
+    CollaboratingAgency,
+    Project,
+    Category,
+    ThematicArea,
+    LeadUnit,
+    Department,
+    ContactPerson,
+    CurricularOffering,
+    TrainingCollaboratingAgency,
+)
+
 
 @admin.register(ExtensionPPA)
 class ExtensionPPAAdmin(admin.ModelAdmin):
@@ -34,7 +48,6 @@ class ExtensionPPAFeaturedAdmin(admin.ModelAdmin):
         }),
     )
 
-# NEW ADMIN CONFIG FOR TABLE 11
 
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
@@ -56,3 +69,11 @@ class TechnologyAdmin(admin.ModelAdmin):
     list_display = ['technology_title', 'department', 'year_developed', 'technology_status']
     list_filter = ['department', 'year_developed', 'technology_status']
     search_fields = ['technology_title', 'technology_generator']
+
+admin.site.register(Training)
+admin.site.register(CollaboratingAgency)
+admin.site.register(Project)
+admin.site.register(Category)
+admin.site.register(ThematicArea)
+admin.site.register(ContactPerson)
+admin.site.register(TrainingCollaboratingAgency)

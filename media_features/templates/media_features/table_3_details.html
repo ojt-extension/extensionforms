@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Training Details - {{ submission.form_name }}</title>
+    <link rel="stylesheet" href="{% static 'media_features/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'reports_dashboard' %}" class="back-link">← Back to Dashboard</a>
+        <hr>
+        
+        <h1>Training Details 🎓</h1>
+        
+        <h3>Form: {{ submission.form_name }}</h3>
+        <p><strong>Submitted by:</strong> {{ submission.submitter.get_full_name }}</p>
+        <p><strong>Submitted on:</strong> {{ submission.submitted_at|date:"F d, Y P" }}</p>
+
+        <hr>
+
+        <h4>Form Data:</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Training No.</td>
+                    <td>{{ form_data.TrainingNo }}</td>
+                </tr>
+                <tr>
+                    <td>Code</td>
+                    <td>{{ form_data.Code }}</td>
+                </tr>
+                <tr>
+                    <td>Title of Training</td>
+                    <td>{{ form_data.TitleOfTraining }}</td>
+                </tr>
+                <tr>
+                    <td>Project No.</td>
+                    <td>{{ form_data.project|default:"N/A" }}</td>
+                </tr>
+                <tr>
+                    <td>Category</td>
+                    <td>{{ form_data.category|default:"N/A" }}</td>
+                </tr>
+                <tr>
+                    <td>Inclusive Dates</td>
+                    <td>{{ form_data.InclusiveDates }}</td>
+                </tr>
+                <tr>
+                    <td>Venue</td>
+                    <td>{{ form_data.Venue }}</td>
+                </tr>
+                <tr>
+                    <td>Lead Unit</td>
+                    <td>{{ form_data.lead_unit }}</td>
+                </tr>
+                <tr>
+                    <td>Department/Unit</td>
+                    <td>{{ form_data.department }}</td>
+                </tr>
+                <tr>
+                    <td>Contact Person (Training Coordinator)</td>
+                    <td>{{ form_data.training_coordinator }}</td>
+                </tr>
+                <tr>
+                    <td>Related Curricular Offerings</td>
+                    <td>
+                        {% for offering in form_data.related_curricular_offerings.all %}
+                            {{ offering.offering_name }}{% if not forloop.last %}, {% endif %}
+                        {% empty %}
+                            —
+                        {% endfor %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Collaborating Agency/ies</td>
+                    <td>
+                        {% for agency in form_data.collaborating_agencies.all %}
+                            {{ agency.name }}{% if not forloop.last %}, {% endif %}
+                        {% empty %}
+                            —
+                        {% endfor %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>No. of participants by sex (Male)</td>
+                    <td>{{ form_data.total_male }}</td>
+                </tr>
+                <tr>
+                    <td>No. of participants by sex (Female)</td>
+                    <td>{{ form_data.total_female }}</td>
+                </tr>
+                <tr>
+                    <td>No. of participants who prefer not to say</td>
+                    <td>{{ form_data.total_prefer_no_to_say }}</td>
+                </tr>
+                <tr>
+                    <td>Total Participants by Sex</td>
+                    <td>{{ form_data.Total_participants_by_sex }}</td>
+                </tr>
+                <tr>
+                    <td>No. of participants by category (Student)</td>
+                    <td>{{ form_data.student_count }}</td>
+                </tr>
+                <tr>
+                    <td>No. of participants by category (Farmer)</td>
+                    <td>{{ form_data.farmer_count }}</td>
+                </tr>
+                <tr>
+                    <td>No. of participants by category (Fisherfolk)</td>
+                    <td>{{ form_data.fisherfolk_count }}</td>
+                </tr>
+                <tr>
+                    <td>No. of participants by category (Ag Technician)</td>
+                    <td>{{ form_data.ag_technician_count }}</td>
+                </tr>
+                <tr>
+                    <td>No. of participants by category (Government Employee)</td>
+                    <td>{{ form_data.government_employee_count }}</td>
+                </tr>
+                <tr>
+                    <td>No. of participants by category (Private Employee)</td>
+                    <td>{{ form_data.private_employee_count }}</td>
+                </tr>
+                <tr>
+                    <td>No. of participants by category (4Ps)</td>
+                    <td>{{ form_data.fourps_count }}</td>
+                </tr>
+                <tr>
+                    <td>No. of participants by category (Others)</td>
+                    <td>{{ form_data.others_count }}</td>
+                </tr>
+                <tr>
+                    <td>Total Participants by Category</td>
+                    <td>{{ form_data.Total_participants_by_category }}</td>
+                </tr>
+                {% if form_data.category.category_code == 'TVL' %}
+                <tr>
+                    <td>No. of solo parents</td>
+                    <td>{{ form_data.solo_parent_count|default:"—" }}</td>
+                </tr>
+                <tr>
+                    <td>No. of 4Ps members</td>
+                    <td>{{ form_data.fourps_members_count|default:"—" }}</td>
+                </tr>
+                <tr>
+                    <td>No. with disabilities</td>
+                    <td>{{ form_data.pwd_count|default:"—" }}</td>
+                </tr>
+                <tr>
+                    <td>Type of disability</td>
+                    <td>{{ form_data.type_of_disability|default:"—" }}</td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <td>Total No. of Persons Trained</td>
+                    <td>{{ form_data.TotalNoOfPersonsTrained }}</td>
+                </tr>
+                <tr>
+                    <td>Number of days trained</td>
+                    <td>{{ form_data.get_Number_of_days_trained_display }}</td>
+                </tr>
+                <tr>
+                    <td>Number of trainees surveyed</td>
+                    <td>{{ form_data.TotalNoOfTraineesSurveyed }}</td>
+                </tr>
+                <tr>
+                    <td>Client's rating (relevance)</td>
+                    <td>{{ form_data.ClientRatingRelevance|default:"—" }}</td>
+                </tr>
+                <tr>
+                    <td>Client's rating (quality)</td>
+                    <td>{{ form_data.ClientRatingQuality|default:"—" }}</td>
+                </tr>
+                <tr>
+                    <td>Client's rating (timeliness)</td>
+                    <td>{{ form_data.ClientRatingTimeliness|default:"—" }}</td>
+                </tr>
+                <tr>
+                    <td>Total clients requesting trainings</td>
+                    <td>{{ form_data.TotalNumberofClientsRequestingTrainings }}</td>
+                </tr>
+                <tr>
+                    <td>Requests responded in 3 days</td>
+                    <td>{{ form_data.TotalNumberofRequestsResponded }}</td>
+                </tr>
+                {% comment %} Financial Details from the junction table {% endcomment %}
+                {% for tc_agency in form_data.trainingcollaboratingagency_set.all %}
+                <tr>
+                    <td>Amount charged to CvSU ({{ tc_agency.agency.name }})</td>
+                    <td>₱{{ tc_agency.amount_charged_to_cvsu|default:"—" }}</td>
+                </tr>
+                <tr>
+                    <td>Amount charged to partner ({{ tc_agency.agency.name }})</td>
+                    <td>₱{{ tc_agency.amount_charged_to_partner|default:"—" }}</td>
+                </tr>
+                {% endfor %}
+                <tr>
+                    <td>Sustainable Development Goal</td>
+                    <td>{{ form_data.sustainable_development_goal }}</td>
+                </tr>
+                <tr>
+                    <td>Thematic Area</td>
+                    <td>{{ form_data.thematic_area }}</td>
+                </tr>
+                <tr>
+                    <td>Remarks</td>
+                    <td>{{ form_data.remarks|default:"—" }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4 class="mt-8">Supporting Documents:</h4>
+        <ul class="file-list">
+            {% for doc in form_data.supporting_documents.all %}
+                <li><a href="{{ doc.file.url }}" target="_blank">{{ doc.file.name|cut:"supporting_documents/" }}</a></li>
+            {% empty %}
+                <li>No supporting documents uploaded.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>

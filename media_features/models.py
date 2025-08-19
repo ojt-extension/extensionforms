@@ -8,8 +8,6 @@ from django.db import models
 
 
 
-
-
 class MediaOutlet(models.Model):
     """Represents different media outlets where PPAs can be featured"""
     media_outlet_id = models.AutoField(primary_key=True)
@@ -72,12 +70,33 @@ class ExtensionPPAFeatured(models.Model):
         ordering = ['-date_featured']
         verbose_name = "PPA Media Feature"
         verbose_name_plural = "PPA Media Features"
-    
 
+
+class LeadUnit(models.Model):
+    """Represents a lead unit, such as a college or campus."""
+    lead_unit_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        db_table = 'tblLeadUnit'
+        verbose_name = 'Lead Unit'
+        verbose_name_plural = 'Lead Units'
+    
 class Department(models.Model):
-    """Represents a department within the institution."""
+    """Represents a department within the institution, linked to a Lead Unit."""
     department_id = models.AutoField(primary_key=True)
     department_name = models.CharField(max_length=255)
+    lead_unit = models.ForeignKey(
+        'LeadUnit',
+        on_delete=models.SET_NULL,
+        null=True,  # This allows the database to store null for existing records
+        blank=True, # This allows the field to be optional in forms
+        verbose_name="Lead Unit"
+    )
+
 
     def __str__(self):
         return self.department_name
@@ -85,6 +104,40 @@ class Department(models.Model):
     class Meta:
         db_table = 'tblDepartment'
         ordering = ['department_name']
+        verbose_name = 'Lead Unit Department/Unit'
+        verbose_name_plural = 'Lead Unit Departments/Units'
+
+class ContactPerson(models.Model):
+    """Represents a contact person for a department or unit."""
+    contact_person_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=255)
+    number_email = models.CharField(max_length=255, verbose_name="Number/Email")
+    role = models.CharField(max_length=100, help_text="e.g., Training Coordinator")
+    department = models.ForeignKey(
+        'Department',
+        on_delete=models.CASCADE,
+        related_name='contact_persons'
+    )
+    
+    def __str__(self):
+        return f"{self.name} ({self.role})"
+        
+    class Meta:
+        db_table = 'tblContactPerson'
+        verbose_name_plural = 'Contact Persons'
+
+class CurricularOffering(models.Model):
+    """Represents a curricular offering or program."""
+    curricular_offering_id = models.AutoField(primary_key=True)
+    offering_name = models.CharField(max_length=255)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='curricular_offerings')
+
+    def __str__(self):
+        return self.offering_name
+    
+    class Meta:
+        db_table = 'tblCurricularOffering'
+        ordering = ['offering_name']
 
 class TechnologyStatus(models.Model):
     """A lookup table for the status of a technology."""
@@ -103,18 +156,7 @@ class TechnologyStatus(models.Model):
         db_table = 'tblTechnologyStatus'
         verbose_name_plural = 'Technology Statuses'
 
-class CurricularOffering(models.Model):
-    """Represents a curricular offering or program."""
-    curricular_offering_id = models.AutoField(primary_key=True)
-    offering_name = models.CharField(max_length=255)
-    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='curricular_offerings')
 
-    def __str__(self):
-        return self.offering_name
-    
-    class Meta:
-        db_table = 'tblCurricularOffering'
-        ordering = ['offering_name']
 
 
 class Technology(models.Model):
@@ -247,7 +289,12 @@ class SupportingDocument(models.Model):
     """
     Model to store multiple documents for a single ExtensionPPAFeatured or Technology record.
     """
-        
+    training = models.ForeignKey(
+        'Training', 
+        on_delete=models.CASCADE, 
+        related_name='supporting_documents',
+        null=True, blank=True
+    )   
     extension_ppa_featured = models.ForeignKey(
         ExtensionPPAFeatured,
         on_delete=models.CASCADE,
@@ -279,7 +326,9 @@ class SupportingDocument(models.Model):
     file = models.FileField(upload_to='supporting_documents/')
     submitter = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True)
     def __str__(self):
-        if self.extension_ppa_featured:
+        if self.training:
+            return f"Document for Training: {self.training.TitleOfTraining}"
+        elif self.extension_ppa_featured:
             return f"Document for {self.extension_ppa_featured.extension_ppa.ppa_name}"
         elif self.technology:
             return f"Document for {self.technology.technology_title}"
@@ -328,4 +377,181 @@ class FormSubmission(models.Model):
         ordering = ['-submitted_at']
 
 
+class Category(models.Model):
+    """A lookup table for training categories."""
+    CATEGORY_CHOICES = [
+        ('TVL', 'TVL - technical, vocational, livelihood'),
+        ('AE', 'AE - agricultural and environmental trainings'),
+        ('CE', 'CE - continuing education for professionals'),
+        ('BE', 'BE - basic education'),
+        ('GAD', 'GAD - Gender and Development'),
+        ('O', 'O - others'),
+    ]
+    category_code = models.CharField(max_length=50, choices=CATEGORY_CHOICES, primary_key=True)
+    description = models.CharField(max_length=255, blank=True)
 
+    def __str__(self):
+        return self.get_category_code_display()
+
+    class Meta:
+        db_table = 'tblTrainingCategory'
+        verbose_name_plural = 'Categories'
+
+class ThematicArea(models.Model):
+    """A lookup table for thematic areas."""
+    AREA_CHOICES = [
+        ('A', 'A- Agri-Fisheries and Food Security'),
+        ('B', 'B-Biodiversity and Environmental Conservation'),
+        ('C', 'C-Smart Engineering, ICT and Industrial Competitiveness'),
+        ('D', 'D-Public Health and Welfare'),
+        ('E', 'E-Societal Development and Equality'),
+    ]
+    area_code = models.CharField(max_length=50, choices=AREA_CHOICES, primary_key=True)
+    description = models.CharField(max_length=255, blank=True)
+
+    def __str__(self):
+        return self.get_area_code_display()
+
+    class Meta:
+        db_table = 'tblThematicArea'
+        verbose_name_plural = 'Thematic Areas'
+
+class Project(models.Model):
+    """Represents internally or externally funded projects."""
+    project_no = models.CharField(max_length=100, primary_key=True)
+    project_title = models.CharField(max_length=500, verbose_name="Project Title")
+    
+    def __str__(self):
+        return f"{self.project_no}: {self.project_title}"
+    
+    class Meta:
+        db_table = 'tblProject'
+
+class Training(models.Model):
+    """The main model for trainings (Table 3)."""
+    TRAINING_DAYS_CHOICES = [
+        ('5+', '5 or more days (x 2.00)'),
+        ('3-4', '3 to 4 days (x 1.5)'),
+        ('2', '2 days (x 1.25)'),
+        ('1', '1 day (8 hours) (x 1.00)'),
+        ('less_1', 'Less than 1 day or 8 hours (x 0.5)'),
+    ]
+    
+    training_no = models.CharField(max_length=100, null=True, blank=True)
+    Code = models.CharField(max_length=100, verbose_name="Code (c/o Extension Services)", blank=True, null=True)
+    TitleOfTraining = models.CharField(max_length=500)
+    project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Project No.")
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
+    InclusiveDates = models.CharField(max_length=255, verbose_name="Inclusive Dates")
+    Venue = models.CharField(max_length=255)
+    
+    # Lead Unit info
+    lead_unit = models.ForeignKey('LeadUnit', on_delete=models.SET_NULL, null=True, blank=True)
+    department = models.ForeignKey('Department', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Lead Unit Department/Unit")
+    contact_person = models.CharField(max_length=255, verbose_name="Contact Person", blank=True, null=True)
+    contact_number_email = models.CharField(max_length=255, verbose_name="Number/Email", blank=True, null=True)
+    
+    related_curricular_offering = models.CharField(max_length=500, verbose_name="Related Curricular Offering (e.g. BS Agriculture)")
+    
+    total_male = models.IntegerField(default=0, verbose_name="Male")
+    total_female = models.IntegerField(default=0, verbose_name="Female")
+    total_prefer_no_to_say = models.IntegerField(default=0, verbose_name="Prefer not to say")
+    Total_participants_by_sex = models.IntegerField(default=0, editable=False)
+
+    # Participant counts by category
+    student_count = models.IntegerField(default=0, verbose_name="Student")
+    farmer_count = models.IntegerField(default=0, verbose_name="Farmer")
+    fisherfolk_count = models.IntegerField(default=0, verbose_name="Fisherfolk")
+    ag_technician_count = models.IntegerField(default=0, verbose_name="Ag Technician")
+    government_employee_count = models.IntegerField(default=0, verbose_name="Government Employee")
+    private_employee_count = models.IntegerField(default=0, verbose_name="Private Employee")
+    fourps_count = models.IntegerField(default=0, verbose_name="4Ps")
+    others_count = models.IntegerField(default=0, verbose_name="Others")
+    Total_participants_by_category = models.IntegerField(default=0, editable=False)
+
+    # TVL Specific Fields
+    solo_parent_count = models.IntegerField(default=0, verbose_name="No. of participants who are solo parent", blank=True, null=True)
+    fourps_members_count = models.IntegerField(default=0, verbose_name="No. of participants who are 4Ps members", blank=True, null=True)
+    pwd_count = models.IntegerField(default=0, verbose_name="No. of participants with disabilities", blank=True, null=True)
+    type_of_disability = models.CharField(max_length=255, verbose_name="Type of disability", blank=True, null=True)
+
+    TotalNoOfPersonsTrained = models.IntegerField(default=0, editable=False)
+    Number_of_days_trained = models.CharField(max_length=20, choices=TRAINING_DAYS_CHOICES, verbose_name="Number of days trained")
+    Number_of_days_trained_weight = models.FloatField(verbose_name="Number of days trained per weight of training", editable=False)
+    TotalNoOfTraineesSurveyed = models.IntegerField(default=0)
+    ClientRatingRelevance = models.IntegerField(verbose_name="Client's rating on the training (relevance)", blank=True, null=True)
+    ClientRatingQuality = models.IntegerField(verbose_name="Client's rating on the training (quality)", blank=True, null=True)
+    ClientRatingTimeliness = models.IntegerField(verbose_name="Client's rating on the training (timeliness)", blank=True, null=True)
+    TotalNumberofClientsRequestingTrainings = models.IntegerField(default=0)
+    TotalNumberofRequestsResponded = models.IntegerField(default=0)
+    
+    sustainable_development_goal = models.CharField(max_length=255, verbose_name="Sustainable Development Goal", blank=True, null=True)
+    thematic_area = models.ForeignKey(ThematicArea, on_delete=models.SET_NULL, null=True, blank=True)
+    remarks = models.TextField(blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        # Calculate Total Participants by Sex
+        self.Total_participants_by_sex = (
+            self.total_male + self.total_female + self.total_prefer_no_to_say
+        )
+
+        # Calculate Total Participants by Category
+        self.Total_participants_by_category = (
+            self.student_count + self.farmer_count + self.fisherfolk_count +
+            self.ag_technician_count + self.government_employee_count +
+            self.private_employee_count + self.fourps_count + self.others_count
+        )
+
+        # Calculate Total No. of Persons Trained (sum of all participant counts)
+        self.TotalNoOfPersonsTrained = (
+            self.Total_participants_by_sex + self.Total_participants_by_category
+        )
+
+        # Assign weight based on Number_of_days_trained
+        weights = {
+            '5+': 2.00,
+            '3-4': 1.5,
+            '2': 1.25,
+            '1': 1.00,
+            'less_1': 0.5
+        }
+        self.Number_of_days_trained_weight = weights.get(self.Number_of_days_trained, 0.0)
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.TitleOfTraining
+
+    class Meta:
+        db_table = 'tblTraining'
+        verbose_name_plural = 'Trainings'
+
+    supporting_document = models.FileField(
+        upload_to='training_documents/',
+        verbose_name="Supporting Document",
+        blank=True,
+        null=True
+    )
+
+class CollaboratingAgency(models.Model):
+    """Represents a collaborating agency for a training."""
+    agency_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=255, verbose_name="Name of Partner Agency")
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        db_table = 'tblCollaboratingAgency'
+        verbose_name_plural = 'Collaborating Agencies'
+
+class TrainingCollaboratingAgency(models.Model):
+    """Junction table for Training and Collaborating Agency."""
+    training = models.ForeignKey(Training, on_delete=models.CASCADE)
+    agency = models.ForeignKey(CollaboratingAgency, on_delete=models.CASCADE)
+    amount_charged_to_cvsu = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Amount charged to CvSU", blank=True, null=True)
+    amount_charged_to_partner = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Amount charged to partner agency", blank=True, null=True)
+
+    class Meta:
+        db_table = 'tblTrainingCollaboratingAgency'
+        unique_together = ('training', 'agency')

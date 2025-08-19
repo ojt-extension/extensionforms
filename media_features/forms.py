@@ -1,10 +1,110 @@
 #media_features/forms.py
 from django import forms
+from django.forms import ClearableFileInput
 from django.utils import timezone
-from .models import ExtensionPPAFeatured, ExtensionPPA, MediaOutlet, StudentExtensionInvolvement, Technology, Department, TechnologyStatus, CurricularOffering, FacultyInvolvement
+from .models import (
+    ExtensionPPAFeatured, ExtensionPPA, MediaOutlet, StudentExtensionInvolvement, 
+    Technology, TechnologyStatus, FacultyInvolvement, Training, CollaboratingAgency, 
+    Category, ThematicArea, Project, SupportingDocument, LeadUnit, Department, 
+    CurricularOffering, ContactPerson, TrainingCollaboratingAgency
+)
 
 
+DAYS_TRAINED_CHOICES = (
+    ('5 or more days', '5 or more days (x 2.00)'),
+    ('3 to 4 days', '3 to 4 days (x 1.5)'),
+    ('2 days', '2 days (x 1.25)'),
+    ('1 day (8 hours)', '1 day (8 hours) (x 1.00)'),
+    ('Less than 1 day or 8 hours', 'Less than 1 day or 8 hours (x 0.5)'),
+)
+
+
+class TrainingForm(forms.ModelForm):
     
+    # This field handles the M2M relationship
+    collaborating_agencies = forms.ModelMultipleChoiceField(
+        queryset=CollaboratingAgency.objects.all(),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="Collaborating Agency/ies"
+    )
+    
+    contact_person_training_coordinator = forms.CharField(
+        label='Contact Person (Training Coordinator)',
+        max_length=100
+    )
+    training_no = forms.CharField(label='Training No.', max_length=100)
+    Total_participants_by_sex_display = forms.IntegerField(label='Total', required=False, disabled=True)
+    Total_participants_by_category_display = forms.IntegerField(label='Total', required=False, disabled=True)
+    TotalNoOfPersonsTrained_display = forms.IntegerField(label='Total No. of Persons Trained', required=False, disabled=True)
+    Number_of_days_trained_weight_display = forms.DecimalField(
+        label='Number of days trained per weight of training',
+        required=False,
+        disabled=True
+    )
+    amount_charged_to_cvsu = forms.DecimalField(
+        label='Amount charged to CvSU (campus/college/unit)',
+        max_digits=10,
+        decimal_places=2,
+        required=False
+    )
+    amount_charged_to_partner = forms.DecimalField(
+        label='Amount charged to partner agency (PhP)',
+        help_text='(if there is no cash involve, include estimates/value)',
+        max_digits=10,
+        decimal_places=2,
+        required=False
+    )
+    name_of_partner_agency = forms.CharField(
+        label='Name of Partner Agency',
+        max_length=255,
+        required=False
+    )
+    class Meta:
+        model = Training
+        fields = [
+            'training_no','Code', 'TitleOfTraining', 'project', 'department', 'contact_person',
+            'contact_number_email', 'related_curricular_offering',
+            'InclusiveDates', 'Venue', 'category', 'total_male', 'total_female',
+            'total_prefer_no_to_say', 'student_count', 'farmer_count', 'fisherfolk_count',
+            'ag_technician_count', 'government_employee_count', 'private_employee_count',
+            'fourps_count', 'others_count', 'solo_parent_count', 'fourps_members_count',
+            'pwd_count', 'type_of_disability', 
+            'Number_of_days_trained', 'TotalNoOfTraineesSurveyed', 'ClientRatingRelevance',
+            'ClientRatingQuality', 'ClientRatingTimeliness', 'TotalNumberofClientsRequestingTrainings',
+            'TotalNumberofRequestsResponded', 'sustainable_development_goal', 'thematic_area',
+            'remarks', 'supporting_document', 'collaborating_agencies',  
+            'contact_person_training_coordinator','amount_charged_to_cvsu', 'amount_charged_to_partner',
+            'name_of_partner_agency',
+            # You must REMOVE the 'files' field from this list if your model doesn't have it
+        ]
+
+        widgets = {
+            'Number_of_days_trained': forms.RadioSelect(choices=DAYS_TRAINED_CHOICES),
+            'ClientRatingRelevance': forms.RadioSelect(choices=zip(range(1, 6), range(1, 6))),
+            'ClientRatingQuality': forms.RadioSelect(choices=zip(range(1, 6), range(1, 6))),
+            'ClientRatingTimeliness': forms.RadioSelect(choices=zip(range(1, 6), range(1, 6))),
+        }
+
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Populate dynamic dropdowns
+       
+        self.fields['department'].queryset = Department.objects.all().order_by('department_name')
+        self.fields['project'].queryset = Project.objects.all().order_by('project_no')
+        self.fields['category'].queryset = Category.objects.all().order_by('category_code')
+        self.fields['thematic_area'].queryset = ThematicArea.objects.all().order_by('area_code')
+        self.fields['contact_person'].queryset = ContactPerson.objects.all().order_by('name')
+        self.fields['related_curricular_offering'].queryset = CurricularOffering.objects.all().order_by('offering_name')
+
+
+
+class FinancialContributionForm(forms.ModelForm):
+    class Meta:
+        model = TrainingCollaboratingAgency
+        fields = ['agency', 'amount_charged_to_cvsu', 'amount_charged_to_partner']
+
 class ExtensionPPAFeaturedForm(forms.ModelForm):
     extension_ppa = forms.ModelChoiceField(
         queryset=ExtensionPPA.objects.all().order_by('ppa_name'),
@@ -211,3 +311,5 @@ class FacultyInvolvementForm(forms.ModelForm):
             else:
                 # Default fallback
                 field.widget.attrs.update({'class': 'form-input'})
+
+

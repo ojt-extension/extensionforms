@@ -4,22 +4,23 @@ from django.contrib import messages
 from django.http import HttpResponse, JsonResponse
 from django.db import transaction 
 from django.contrib.auth.decorators import login_required  # <-- Import login_required
-
+from django.forms import formset_factory 
 from openpyxl import Workbook 
 from openpyxl.styles import Font, Alignment
 from openpyxl.utils import get_column_letter
 
-from .forms import ExtensionPPAFeaturedForm, TechnologyForm, StudentExtensionInvolvementForm, FacultyInvolvementForm
+from .forms import ExtensionPPAFeaturedForm, TechnologyForm, StudentExtensionInvolvementForm, FacultyInvolvementForm, TrainingForm, FinancialContributionForm
 from .models import ExtensionPPAFeatured, ExtensionPPA, MediaOutlet, SupportingDocument, StudentExtensionInvolvement
-from .models import Technology, Department, CurricularOffering, FormSubmission, FacultyInvolvement
+from .models import Technology, Department, CurricularOffering, FormSubmission, FacultyInvolvement, Training, CollaboratingAgency, TrainingCollaboratingAgency, Category, ThematicArea, Project, LeadUnit
 import json # Import json to handle the form_data JSONField
-# from your_app_name.models import TechnologyCommercialized # Example for Table 11
+
 
 def reports_dashboard(request):
     """
     Renders the main dashboard page with links to all forms.
     """
     forms = [
+        {'name': 'Table 3: Trainings', 'url_name': 'table_3_form'},
         {'name': 'Table 8: Faculty Involvement in ESCE', 'url_name': 'table_8_form'},
         {'name': 'Table 9: Student Involvement in ESCE', 'url_name': 'table_9_form'},
         {'name': 'Table 10: ES Activities Featured Forms', 'url_name': 'table_10_form'},
@@ -194,6 +195,8 @@ def export_all_to_excel(request):
             related_name = 'extension_ppa_featured'
         elif model_name == 'technology':
             related_name = 'technology'
+        elif model_name == 'training':
+            related_name = 'training'
         
         docs = SupportingDocument.objects.filter(**{related_name: self})
         return ", ".join([f"{base_url}{doc.file.url}" for doc in docs])
@@ -202,6 +205,21 @@ def export_all_to_excel(request):
 
     def get_curricular_offerings(self):
         return ", ".join([offering.offering_name for offering in self.curricular_offerings.all()])
+    
+    def get_collaborating_agencies(self):
+        return ", ".join([agency.agency.agency_name for agency in self.collaborating_agencies.all()])
+
+    def get_contact_person(self):
+        return self.contact_person.name if self.contact_person else ''
+
+    def get_category_name(self):
+        return self.category.category_name if self.category else ''
+
+    def get_thematic_area(self):
+        return self.thematic_area.thematic_area_name if self.thematic_area else ''
+
+    def get_project_name(self):
+        return self.project.project_title if self.project else ''
 
     FacultyInvolvement.add_to_class('supporting_documents_list', get_supporting_documents)
     ExtensionPPAFeatured.add_to_class('supporting_documents_list', get_supporting_documents)
@@ -209,8 +227,52 @@ def export_all_to_excel(request):
     Technology.add_to_class('curricular_offerings_list', get_curricular_offerings)
     StudentExtensionInvolvement.add_to_class('supporting_documents_list', get_supporting_documents)
 
+    Training.add_to_class('collaborating_agencies_list', get_collaborating_agencies)
+    Training.add_to_class('contact_person_name', get_contact_person)
+    Training.add_to_class('category_name', get_category_name)
+    Training.add_to_class('thematic_area_name', get_thematic_area)
+    Training.add_to_class('project_title', get_project_name)
+    Training.add_to_class('supporting_documents_list', get_supporting_documents)
+
     # Dictionary defining the tables to export and their configurations
     tables = {
+        'Table 3 - Trainings': {
+            'model': Training,
+            'fields': [
+                'training_no'
+                'TitleOfTraining',
+                'TitleOfTraining',
+                'lead_unit__name',
+                'department__department_name',
+                'contact_person_name',
+                'category_name',
+                'thematic_area_name',
+                'project_title',
+                'collaborating_agencies_list',
+                'Total_participants_by_sex',
+                'Total_participants_by_category',
+                'TotalBudget',
+                'TotalExpenditure',
+                'supporting_documents_list'
+            ],
+            'headers': [
+                'Training ID',
+                'Title of Training',
+                'Lead Unit',
+                'Unit/Department',
+                'Contact Person',
+                'Category',
+                'Thematic Area',
+                'Related Project',
+                'Collaborating Agencies',
+                'Total Participants by Sex',
+                'Total Participants by Category',
+                'Total Budget',
+                'Total Expenditure',
+                'Supporting Documents'
+            ],
+            'notes': ['', '', '', '', '', '', '', '', '', '', '', '', '', '1. Approved proposal\n2. Documentation of the Training\n3. Financial documents']
+        },
         'Table 8 - Faculty Involvement': {
             'model': FacultyInvolvement,
             'fields': [
@@ -333,6 +395,8 @@ def export_all_to_excel(request):
             queryset = queryset.select_related('department', 'technology_status').prefetch_related('curricular_offerings', 'supporting_documents')
         elif model == StudentExtensionInvolvement:
             queryset = queryset.select_related('department', 'curricular_offering').prefetch_related('supporting_documents')
+        elif model == Training:
+            queryset = queryset.select_related('lead_unit', 'department', 'contact_person', 'category', 'thematic_area', 'project').prefetch_related('collaborating_agencies', 'supporting_documents')
 
         # Write data rows
         start_row = 3
@@ -507,3 +571,61 @@ def technologies_details(request, submission_id):
     form_data = get_object_or_404(Technology, pk=submission.form_id)
     context = { 'submission': submission, 'form_data': form_data }
     return render(request, 'media_features/table_11_details.html', context)
+
+@login_required
+def training_form_view(request):
+    FinancialFormSet = formset_factory(FinancialContributionForm, extra=1)
+
+    if request.method == 'POST':
+        form = TrainingForm(request.POST)
+        financial_formset = FinancialFormSet(request.POST, prefix='financial')
+
+        if form.is_valid() and financial_formset.is_valid():
+            with transaction.atomic():
+                training_instance = form.save()
+
+                # Handle collaborating agencies
+                agencies = form.cleaned_data.get('collaborating_agencies')
+                if agencies:
+                    training_instance.related_curricular_offering.set(agencies)
+
+                # Handle financial contributions from the formset
+                for financial_form in financial_formset:
+                    if financial_form.cleaned_data:
+                        financial_instance = financial_form.save(commit=False)
+                        financial_instance.training = training_instance
+                        financial_instance.save()
+
+            messages.success(request, 'Training record saved successfully!')
+            return redirect('training_form')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = TrainingForm()
+        financial_formset = FinancialFormSet(prefix='financial')
+
+    trainings = Training.objects.all().order_by('-training_no')
+    context = {
+        'form': form,
+        'trainings': trainings,
+        'financial_formset': financial_formset
+    }
+    return render(request, 'media_features/table_3_form.html', context)
+
+def training_details(request, submission_id):
+    submission = get_object_or_404(FormSubmission, pk=submission_id)
+    form_data = get_object_or_404(Training, pk=submission.form_instance_id)
+    context = { 'submission': submission, 'form_data': form_data }
+    return render(request, 'media_features/table_3_details.html', context)
+
+# Update the reports_dashboard view to include the new form
+def reports_dashboard(request):
+    """Renders the main dashboard page with links to all forms."""
+    forms = [
+        {'name': 'Table 3: Trainings', 'url_name': 'table_3_form'},
+        {'name': 'Table 8: Faculty Involvement in ESCE', 'url_name': 'table_8_form'},
+        {'name': 'Table 9: Student Involvement in ESCE', 'url_name': 'table_9_form'},
+        {'name': 'Table 10: ES Activities Featured Forms', 'url_name': 'table_10_form'},
+        {'name': 'Table 11: Technologies Commercialized', 'url_name': 'table_11_form'},
+    ]
+    return render(request, 'media_features/dashboard.html', {'forms': forms})

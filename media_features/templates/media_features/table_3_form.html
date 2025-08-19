@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table 3. Trainings</title>
+    <link rel="stylesheet" href="{% static 'media_features/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'reports_dashboard' %}" style="text-decoration: none; color: #000;">
+            <p style="margin-bottom: 20px;">&larr; Back to Dashboard</p>
+        </a>
+        <h1>Table 3. Trainings</h1>
+
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-container">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                {{ form.training_no.label_tag }}  {{ form.training_no }}
+                {{ form.Code.label_tag }} {{ form.Code }}
+                
+                <hr>
+
+                <h3>Lead Unit</h3>
+                {{ form.department.label_tag }} {{ form.department }}
+                {{ form.contact_person.label_tag }} {{ form.contact_person }}
+                {{ form.contact_number_email.label_tag }} {{ form.contact_number_email }}
+                
+                <hr>
+                
+                {{ form.related_curricular_offering.label_tag }} {{ form.related_curricular_offering }}
+                
+                {{ form.collaborating_agencies.label_tag }}
+                {{ form.collaborating_agencies }}
+                
+                {{ form.contact_person_training_coordinator.label_tag }} {{ form.contact_person_training_coordinator }}
+
+                {{ form.project.label_tag }} {{ form.project }}
+
+                {{ form.category.label_tag }} {{ form.category }}
+
+                {{ form.TitleOfTraining.label_tag }} {{ form.TitleOfTraining }}
+
+                {{ form.InclusiveDates.label_tag }} {{ form.InclusiveDates }}
+
+                {{ form.Venue.label_tag }} {{ form.Venue }}
+                
+                <hr>
+
+                <h3>No. of participants by sex</h3>
+                {{ form.total_male.label_tag }} {{ form.total_male }}
+                {{ form.total_female.label_tag }} {{ form.total_female }}
+                {{ form.total_prefer_no_to_say.label_tag }} {{ form.total_prefer_no_to_say }}
+                {{ form.Total_participants_by_sex_display.label_tag }} {{ form.Total_participants_by_sex_display }}
+
+                <h3>No. of participants by category</h3>
+                {{ form.student_count.label_tag }} {{ form.student_count }}
+                {{ form.farmer_count.label_tag }} {{ form.farmer_count }}
+                {{ form.fisherfolk_count.label_tag }} {{ form.fisherfolk_count }}
+                {{ form.ag_technician_count.label_tag }} {{ form.ag_technician_count }}
+                {{ form.government_employee_count.label_tag }} {{ form.government_employee_count }}
+                {{ form.private_employee_count.label_tag }} {{ form.private_employee_count }}
+                {{ form.fourps_count.label_tag }} {{ form.fourps_count }}
+                {{ form.others_count.label_tag }} {{ form.others_count }}
+                {{ form.Total_participants_by_category_display.label_tag }} {{ form.Total_participants_by_category_display }}
+
+                <h3>For TVL Trainings Only</h3>
+                {{ form.solo_parent_count.label_tag }} {{ form.solo_parent_count }}
+                {{ form.fourps_members_count.label_tag }} {{ form.fourps_members_count }}
+                {{ form.pwd_count.label_tag }} {{ form.pwd_count }}
+                {{ form.type_of_disability.label_tag }} {{ form.type_of_disability }}
+                {{ form.TotalNoOfPersonsTrained_display.label_tag }} {{ form.TotalNoOfPersonsTrained_display }}
+                
+                <hr>
+
+                {{ form.Number_of_days_trained.label_tag }}
+                {{ form.Number_of_days_trained }}
+                {{ form.Number_of_days_trained_weight_display.label_tag }}
+                {{ form.Number_of_days_trained_weight_display }}
+                
+                {{ form.TotalNoOfTraineesSurveyed.label_tag }}
+                {{ form.TotalNoOfTraineesSurveyed }}
+                {{ form.ClientRatingRelevance.label_tag }} {{ form.ClientRatingRelevance }}
+                {{ form.ClientRatingQuality.label_tag }} {{ form.ClientRatingQuality }}
+                {{ form.ClientRatingTimeliness.label_tag }} {{ form.ClientRatingTimeliness }}
+                
+                {{ form.TotalNumberofClientsRequestingTrainings.label_tag }} {{ form.TotalNumberofClientsRequestingTrainings }}
+
+                {{ form.TotalNumberofRequestsResponded.label_tag }} {{ form.TotalNumberofRequestsResponded }}
+                
+                <h3>Estimated Expenses and source of fund</h3>
+                {{ form.amount_charged_to_cvsu.label_tag }} {{ form.amount_charged_to_cvsu }}
+                {{ form.amount_charged_to_partner.label_tag }} {{ form.amount_charged_to_partner }}
+                {{ form.name_of_partner_agency.label_tag }} {{ form.name_of_partner_agency }}
+                
+                {{ form.sustainable_development_goal.label_tag }} {{ form.sustainable_development_goal }}
+
+                {{ form.thematic_area.label_tag }} {{ form.thematic_area }}
+
+                {{ form.remarks.label_tag }} {{ form.remarks }}
+
+                <hr>
+                <h3>Supporting Documents</h3>
+                <p>
+                    <small>
+                        <i>
+                            1. Copy of training report, following the prescribed format of the University Extension Services. Including the following:<br>
+                            &middot; Copy of the program<br>
+                            &middot; Copy of the attendance sheet<br>
+                            &middot; Photo documentation<br>
+                            &middot; Copy of the sample evaluation form accomplished by the participant
+                        </i>
+                    </small>
+                </p>
+                {{ form.supporting_document.label_tag }} {{ form.supporting_document }}
+                
+                <button type="submit">Submit</button>
+            </form>
+        </div>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Participant Totals by Sex
+        const inputsSex = [
+            document.getElementById('id_total_male'),
+            document.getElementById('id_total_female'),
+            document.getElementById('id_total_prefer_no_to_say')
+        ].filter(el => el);
+        const displayTotalSex = document.getElementById('id_Total_participants_by_sex_display');
+
+        // Participant Totals by Category
+        const inputsCategory = [
+            document.getElementById('id_student_count'),
+            document.getElementById('id_farmer_count'),
+            document.getElementById('id_fisherfolk_count'),
+            document.getElementById('id_ag_technician_count'),
+            document.getElementById('id_government_employee_count'),
+            document.getElementById('id_private_employee_count'),
+            document.getElementById('id_fourps_count'),
+            document.getElementById('id_others_count')
+        ].filter(el => el);
+        const displayTotalCategory = document.getElementById('id_Total_participants_by_category_display');
+        
+        // Total No. of Persons Trained (sum of all participant counts)
+        const displayTotalPersonsTrained = document.getElementById('id_TotalNoOfPersonsTrained_display');
+
+        function updateTotals() {
+            let totalSex = inputsSex.reduce((sum, input) => sum + (parseInt(input.value) || 0), 0);
+            if (displayTotalSex) {
+                displayTotalSex.value = totalSex;
+            }
+
+            let totalCategory = inputsCategory.reduce((sum, input) => sum + (parseInt(input.value) || 0), 0);
+            if (displayTotalCategory) {
+                displayTotalCategory.value = totalCategory;
+            }
+
+            let totalPersonsTrained = totalSex + totalCategory;
+            if (displayTotalPersonsTrained) {
+                displayTotalPersonsTrained.value = totalPersonsTrained;
+            }
+        }
+
+        inputsSex.forEach(input => input.addEventListener('input', updateTotals));
+        inputsCategory.forEach(input => input.addEventListener('input', updateTotals));
+        updateTotals();
+
+        // Number of days trained weight calculation
+        const radioButtonsDays = document.querySelectorAll('input[name="Number_of_days_trained"]');
+        const weightDisplay = document.getElementById('id_Number_of_days_trained_weight_display');
+        
+        const weights = {
+            '5 or more days': 2.00,
+            '3 to 4 days': 1.5,
+            '2 days': 1.25,
+            '1 day (8 hours)': 1.00,
+            'Less than 1 day or 8 hours': 0.5
+        };
+        
+        function updateWeight() {
+            let selectedValue = null;
+            radioButtonsDays.forEach(radio => {
+                if (radio.checked) {
+                    selectedValue = radio.value;
+                }
+            });
+            
+            if (weightDisplay) {
+                weightDisplay.value = weights[selectedValue] || 0.0;
+            }
+        }
+        
+        radioButtonsDays.forEach(radio => radio.addEventListener('change', updateWeight));
+        updateWeight();
+    });
+</script>
+</body>
+</html>

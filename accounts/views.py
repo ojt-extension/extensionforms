@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 
 from .forms import OJTCoordinatorCreationForm, OJTCoordinatorLoginForm
-from media_features.models import FormSubmission, ExtensionPPAFeatured, Technology, StudentExtensionInvolvement, FacultyInvolvement, SupportingDocument
+from media_features.models import FormSubmission, ExtensionPPAFeatured, Technology, StudentExtensionInvolvement, FacultyInvolvement, SupportingDocument, Training, CollaboratingAgency, Category, ThematicArea, Project, LeadUnit, ContactPerson
 from openpyxl.utils import get_column_letter
 import openpyxl
 from openpyxl.styles import Font, Alignment
@@ -81,7 +81,7 @@ def coordinator_dashboard(request):
     This view now passes a list of forms to the template.
     """
     forms = [
-
+        {'name': 'Table 3: Completed Extension Programs/Projects/Activities', 'url_name': 'table_3_form'},
         {'name': 'Table 10: Media Features', 'url_name': 'table_10_form'},
         {'name': 'Table 11: Technologies Commercialized', 'url_name': 'table_11_form'},
         # Add other forms here as needed
@@ -92,21 +92,6 @@ def coordinator_dashboard(request):
     }
     return render(request, 'media_features/dashboard.html', context)
 
-@login_required
-def admin_dashboard(request):
-    """
-    The custom dashboard for the superuser.
-    Shows a list of all submitted forms.
-    """
-    if not request.user.is_superuser:
-        return redirect('coordinator_dashboard')
-        
-    submitted_forms = FormSubmission.objects.all().select_related('submitter')
-    
-    context = {
-        'submitted_forms': submitted_forms,
-    }
-    return render(request, 'accounts/admin_dashboard.html', context)
 
 @login_required
 def export_all_submissions(request):
@@ -138,12 +123,27 @@ def export_all_submissions(request):
             related_name = 'extension_ppa_featured'
         elif model_name == 'technology':
             related_name = 'technology'
+        elif model_name == 'training':
+            related_name = 'training'
+        else:
+            related_name = None  # Handle cases where related_name might be missing
         
-        docs = SupportingDocument.objects.filter(**{related_name: self})
-        return ", ".join([f"{base_url}{doc.file.url}" for doc in docs])
+        if related_name:
+            docs = SupportingDocument.objects.filter(**{related_name: self})
+            return ", ".join([f"{base_url}{doc.file.url}" for doc in docs])
+        return ""
 
     def get_curricular_offerings(self):
         return ", ".join([offering.offering_name for offering in self.curricular_offerings.all()])
+
+    def get_collaborating_agencies(self):
+        return ", ".join([agency.name for agency in self.collaborating_agencies.all()])
+
+    def get_total_participants_by_sex(self):
+        return f"Male: {self.total_male}, Female: {self.total_female}, PNTD: {self.total_prefer_no_to_say}"
+
+    def get_total_participants_by_category(self):
+        return f"Students: {self.student_count}, Farmers: {self.farmer_count}, Fisherfolk: {self.fisherfolk_count}"
 
     # Add these methods to the models so the export logic can use them
     FacultyInvolvement.add_to_class('supporting_documents_list', get_supporting_documents)
@@ -151,9 +151,50 @@ def export_all_submissions(request):
     Technology.add_to_class('supporting_documents_list', get_supporting_documents)
     Technology.add_to_class('curricular_offerings_list', get_curricular_offerings)
     StudentExtensionInvolvement.add_to_class('supporting_documents_list', get_supporting_documents)
+    
+    Training.add_to_class('collaborating_agencies_list', get_collaborating_agencies)
+    Training.add_to_class('supporting_documents_list', get_supporting_documents)
+    Training.add_to_class('total_participants_by_sex', get_total_participants_by_sex)
+    Training.add_to_class('total_participants_by_category', get_total_participants_by_category)
 
     # Dictionary defining the tables to export and their configurations
     tables = {
+        'Table 3 - Trainings': {
+            'model': Training,
+            'fields': [
+                'Code',
+                'TitleOfTraining',
+                'lead_unit__name',
+                'department__department_name',
+                'contact_person__name',
+                'category__category_name',
+                'thematic_area__area_name',
+                'project__project_title',
+                'collaborating_agencies_list',
+                'total_participants_by_sex',
+                'total_participants_by_category',
+                'TotalBudget',
+                'TotalExpenditure',
+                'supporting_documents_list'
+            ],
+            'headers': [
+                'Training ID',
+                'Title of Training',
+                'Lead Unit',
+                'Unit/Department',
+                'Contact Person',
+                'Category',
+                'Thematic Area',
+                'Related Project',
+                'Collaborating Agencies',
+                'Total Participants by Sex',
+                'Total Participants by Category',
+                'Total Budget',
+                'Total Expenditure',
+                'Supporting Documents'
+            ],
+            'notes': ['', '', '', '', '', '', '', '', '', '', '', '', '', '1. Approved proposal\n2. Documentation of the Training\n3. Financial documents']
+        },
         'Table 8 - Faculty Involvement': {
             'model': FacultyInvolvement,
             'fields': ['faculty_staff_name', 'academic_rank_position', 'employment_status', 'avg_hours_per_week', 'total_hours_per_quarter', 'remarks', 'supporting_documents_list'],
@@ -217,6 +258,8 @@ def export_all_submissions(request):
             queryset = queryset.select_related('department', 'curricular_offering').prefetch_related('supporting_documents')
         elif model == FacultyInvolvement:
             queryset = queryset.prefetch_related('supporting_documents')
+        elif model == Training:
+            queryset = queryset.select_related('lead_unit', 'department', 'contact_person', 'category', 'thematic_area', 'project').prefetch_related('collaborating_agencies', 'supporting_documents')
         
         # Write data rows
         start_row = 3
@@ -224,9 +267,11 @@ def export_all_submissions(request):
             row_data = []
             for field in fields:
                 try:
-                    if field in ['curricular_offerings_list', 'supporting_documents_list']:
+                    # Use the dynamically added methods for M2M and FileFields
+                    if field in ['curricular_offerings_list', 'supporting_documents_list', 'collaborating_agencies_list', 'total_participants_by_sex', 'total_participants_by_category']:
                         value = getattr(record, field)()
                     else:
+                        # Use split to handle lookups like department__department_name
                         parts = field.split('__')
                         value = record
                         for part in parts:
@@ -245,6 +290,7 @@ def export_all_submissions(request):
 
     workbook.save(response)
     return response
+
 def view_submission_details(request, submission_id):
     """
     Renders a detailed view of a single form submission.
@@ -252,7 +298,9 @@ def view_submission_details(request, submission_id):
     submission = get_object_or_404(FormSubmission, pk=submission_id)
 
     # Determine which template to render based on the form_name
-    if 'Table 10' in submission.form_name:
+    if 'Table 3' in submission.form_name:
+        template = 'media_features/table_3_details.html'
+    elif 'Table 10' in submission.form_name:
         template = 'media_features/table_10_details.html'
     elif 'Table 11' in submission.form_name:
         template = 'media_features/table_11_details.html'
