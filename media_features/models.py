@@ -88,11 +88,11 @@ class Department(models.Model):
 
 class TechnologyStatus(models.Model):
     """A lookup table for the status of a technology."""
-    TECHNOLOGY_STATUS_CHOICES = [
+    TECHNOLOGY_STATUS_CHOICES = (
         ('DEPLOYED', 'Deployed through various modalities'),
         ('COMMERCIALIZED', 'Commercialized'),
         ('PRE_COMMERCIAL', 'With pre-commercialization activities'),
-    ]
+    )
     status_id = models.AutoField(primary_key=True)
     status_name = models.CharField(max_length=50, choices=TECHNOLOGY_STATUS_CHOICES, unique=True)
     
@@ -173,6 +173,7 @@ class StudentExtensionInvolvement(models.Model):
         verbose_name_plural = 'Student Extension Involvements'
         ordering = ['-created_at']
 
+# Choices for Academic Ranks
 ACADEMIC_RANKS = (
     ('Instructor I', 'Instructor I'),
     ('Instructor II', 'Instructor II'),
@@ -276,6 +277,35 @@ class SupportingDocument(models.Model):
         null=True,
         blank=True
     )
+    ordinance = models.ForeignKey(
+        'Ordinance',
+        on_delete=models.CASCADE,
+        related_name='supporting_documents',
+        null=True,
+        blank=True
+    )
+    impact_assessment = models.ForeignKey(
+        'ImpactAssessment', 
+        on_delete=models.CASCADE,
+        related_name='supporting_documents',
+        null=True,
+        blank=True
+    )
+    award = models.ForeignKey(
+        'Awards',
+        on_delete=models.CASCADE, 
+        related_name='supporting_documents',
+        null=True,
+        blank=True
+    )
+    other_activity = models.ForeignKey(
+        'OtherActivities',
+        on_delete=models.CASCADE,
+        related_name='supporting_documents', 
+        null=True,
+        blank=True
+    )   
+    
     file = models.FileField(upload_to='supporting_documents/')
     submitter = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True)
     def __str__(self):
@@ -285,7 +315,7 @@ class SupportingDocument(models.Model):
             return f"Document for {self.technology.technology_title}"
         elif self.student_involvement:
             return f"Document for {self.student_involvement.department.department_name} - {self.student_involvement.curricular_offering.offering_name}"
-        elif self.faculty_involvement: # <-- NEW condition
+        elif self.faculty_involvement: 
             return f"Document for {self.faculty_involvement.faculty_staff_name}"
         return "Document"
     
@@ -295,7 +325,11 @@ class SupportingDocument(models.Model):
             bool(self.extension_ppa_featured),
             bool(self.technology),
             bool(self.student_involvement),
-            bool(self.faculty_involvement)
+            bool(self.faculty_involvement),
+            bool(self.ordinance),
+            bool(self.impact_assessment),
+            bool(self.award),
+            bool(self.other_activity)
         ])
         
         if fields_set > 1:
@@ -327,5 +361,97 @@ class FormSubmission(models.Model):
     class Meta:
         ordering = ['-submitted_at']
 
+class Ordinance(models.Model):
+    """Model for Ordinances"""
+    ordinance_id = models.AutoField(primary_key=True)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='ordinances')
+    curricular_offering = models.ForeignKey(CurricularOffering, on_delete=models.CASCADE, related_name='ordinances', null=True, blank=True)
+    extension_ppa = models.ForeignKey(ExtensionPPA, on_delete=models.CASCADE, related_name='ordinances', null=True, blank=True)
+    ordinance_title = models.CharField(max_length=500)
+    STATUS_CHOICES = (
+        ('DRAFT', 'Draft'),
+        ('PENDING', 'Pending'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+    )
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='DRAFT')
+    date_approved = models.DateField(null=True, blank=True)
+    remarks = models.TextField(blank=True, null=True)
+    
+    def __str__(self):
+        return self.ordinance_title
+    
+    class Meta:
+        db_table = 'tblOrdinance'
+        ordering = ['-date_approved']
 
 
+class ImpactAssessment(models.Model):
+    """Model for Impact Assessments"""
+    assessment_id = models.AutoField(primary_key=True)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='impact_assessments')
+    curricular_offering = models.ForeignKey(CurricularOffering, on_delete=models.CASCADE, related_name='impact_assessments')
+    extension_ppa_ia = models.ForeignKey(ExtensionPPA, on_delete=models.CASCADE, related_name='impact_assessments')
+    proponent_ias = models.CharField(max_length=255, verbose_name="Proponent/IAs")
+    date_conducted = models.DateField()
+    remarks = models.TextField(blank=True, null=True)
+    
+    def __str__(self):
+        return f"Impact Assessment - {self.department.department_name}"
+    
+    class Meta:
+        db_table = 'tblImpactAssessment'
+        ordering = ['-date_conducted']
+
+
+class Awards(models.Model):
+    """Model for Awards"""
+    award_id = models.AutoField(primary_key=True)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='awards')
+    person_received_award = models.CharField(max_length=255)
+    award_title = models.CharField(max_length=500)
+    award_donor = models.CharField(max_length=255)
+    LEVEL_CHOICES = [
+        ('LOCAL', 'Local'),
+        ('REGIONAL', 'Regional'),
+        ('NATIONAL', 'National'),
+        ('INTERNATIONAL', 'International'),
+    ]
+    level_of_award = models.CharField(max_length=50, choices=LEVEL_CHOICES)
+    date_received = models.DateField()
+    remarks = models.TextField(blank=True, null=True)
+    
+    def __str__(self):
+        return f"{self.award_title} - {self.person_received_award}"
+    
+    class Meta:
+        db_table = 'tblAwards'
+        ordering = ['-date_received']
+
+
+class OtherActivities(models.Model):
+    """Model for Other Activities"""
+    activity_id = models.AutoField(primary_key=True)
+    date_conducted = models.DateField()
+    activity_title = models.CharField(max_length=500)
+    CATEGORY_CHOICES = [
+        ('TRAINING', 'Training'),
+        ('SEMINAR', 'Seminar'),
+        ('WORKSHOP', 'Workshop'),
+        ('CONFERENCE', 'Conference'),
+        ('OUTREACH', 'Community Outreach'),
+        ('OTHER', 'Other'),
+    ]
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
+    participants = models.CharField(max_length=255, verbose_name="Number/Type of Partipants")
+    purpose = models.TextField()
+    amount_spent = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    source_of_funds = models.CharField(max_length=255)
+    remarks = models.TextField(blank=True, null=True)
+    
+    def __str__(self):
+        return self.activity_title
+    
+    class Meta:
+        db_table = 'tblOtherActivities'
+        ordering = ['-date_conducted']
