@@ -31,6 +31,7 @@ urlpatterns = [
     # The new landing page/dashboard will be at the root URL
     path('', include('media_features.urls')),
     path('accounts/', include('accounts.urls')), # <-- Add this line
+    path('adopters/', include('adopters_features.urls')),
 ]
 
 # Add this block to serve media files during development

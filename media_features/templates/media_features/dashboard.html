@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Extension Reports Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'media_features/style.css' %}">
     <style>
         /* General body and layout styles for centering */
@@ -137,13 +138,41 @@
         <div style="margin-bottom: 2rem;">
             {% if forms %}
                 <ul class="form-list">
-                {% for form_info in forms %}
-                    <li class="form-list-item">
-                        <a href="{% url form_info.url_name %}">
-                            {{ form_info.name }}
-                        </a>
-                    </li>
-                {% endfor %}
+                <ul class="form-list">
+            <li class="form-list-item">
+        <a href="{% url 'table5' %}">
+            Table 5: Adopters Profile
+        </a>
+    </li>
+    <li class="form-list-item">
+        <a href="{% url 'table6' %}">
+            Table 6: IEC Materials
+        </a>
+    </li>
+    <li class="form-list-item">
+        <a href="{% url 'table7a' %}">
+            Table 7a: Budget Utilization (GAA)
+        </a>
+    </li>
+    <li class="form-list-item">
+        <a href="{% url 'table7b' %}">
+            Table 7b: Budget Utilization (Income)
+        </a>
+    </li>
+</ul>
+    {% for form_info in forms %}
+        <li class="form-list-item">
+            <a href="{% url form_info.url_name %}">
+                {{ form_info.name }}
+            </a>
+        </li>
+    {% endfor %}
+
+
+
+<hr>
+
+
                 </ul>
             {% else %}
                 <p>No forms available.</p>
