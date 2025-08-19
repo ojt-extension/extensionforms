@@ -251,6 +251,7 @@ def view_submission_details(request, submission_id):
     """
     submission = get_object_or_404(FormSubmission, pk=submission_id)
 
+    template = 'media_features/generic_details.html'
     # Determine which template to render based on the form_name
     if 'Table 10' in submission.form_name:
         template = 'media_features/table_10_details.html'
@@ -260,10 +261,16 @@ def view_submission_details(request, submission_id):
         template = 'media_features/table_9_details.html'
     elif 'Table 8' in submission.form_name:
         template = 'media_features/table_8_details.html'
-    else:
-        # Fallback for other forms
-        template = 'media_features/generic_details.html'
+    elif 'Ordinance Form' in submission.form_name:
+        template = 'media_features/table_12_details.html'
+    elif 'Impact Assessment Form' in submission.form_name:
+        template = 'media_features/table_13_details.html'
+    elif 'Awards Form' in submission.form_name:
+        template = 'media_features/table_14_details.html'
+    elif 'Other Activities Form' in submission.form_name:
+        template = 'media_features/table_15_details.html'
 
+    
     context = {
         'submission': submission,
         'form_data': submission.form_data, # Pass the JSON data directly as it contains the document URLs
