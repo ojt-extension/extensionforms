@@ -83,9 +83,9 @@ WSGI_APPLICATION = 'extension_tracker.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'extension_ppa_db',  # Your database name
+        'NAME': 'extension_management_db',  # Your database name
         'USER': 'postgres',              # Default PostgreSQL username
-        'PASSWORD': 'rnyangg',     # Your PostgreSQL password
+        'PASSWORD': 'jcdiokno',     # Your PostgreSQL password
         'HOST': '127.0.0.1',             # Or '127.0.0.1'
         'PORT': '5432',                  # Default PostgreSQL port
     }

@@ -1,15 +1,12 @@
 from django import forms
 from .models import Table5Adopter, Table6IEC, Table7aBudgetGAA, Table7bBudgetIncome
 
-class DateInput(forms.DateInput):
-    input_type = 'date'
-
 class Table5Form(forms.ModelForm):
     class Meta:
         model = Table5Adopter
-        fields = '__all__'
+        exclude = ('submission', 'income_difference', 'lead_unit')
         widgets = {
-            'date_started': DateInput(),
+            'date_started': forms.DateInput(attrs={'type': 'date'}),
             'remarks': forms.Textarea(attrs={'rows': 3}),
             'other_significant_changes': forms.Textarea(attrs={'rows': 3}),
             'projects_involved': forms.Textarea(attrs={'rows': 3}),
@@ -22,7 +19,7 @@ class Table5Form(forms.ModelForm):
 class Table6Form(forms.ModelForm):
     class Meta:
         model = Table6IEC
-        fields = '__all__'
+        exclude = ('submission', 'total_recipients', 'lead_unit')
         widgets = {
             'remarks': forms.Textarea(attrs={'rows': 3}),
         }
@@ -30,7 +27,7 @@ class Table6Form(forms.ModelForm):
 class Table7aForm(forms.ModelForm):
     class Meta:
         model = Table7aBudgetGAA
-        fields = '__all__'
+        exclude = ('submission',)
         widgets = {
             'remarks': forms.Textarea(attrs={'rows': 3}),
         }
@@ -38,7 +35,7 @@ class Table7aForm(forms.ModelForm):
 class Table7bForm(forms.ModelForm):
     class Meta:
         model = Table7bBudgetIncome
-        fields = '__all__'
+        exclude = ('submission',)
         widgets = {
             'remarks': forms.Textarea(attrs={'rows': 3}),
         }

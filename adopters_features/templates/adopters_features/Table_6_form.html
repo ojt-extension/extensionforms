@@ -2,108 +2,291 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Table 6 - IEC Materials</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Table 6 - IEC Materials</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="p-4">
-  <div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-4">Table 6 - IEC Materials</h2>
-        <a href="{% url 'reports_dashboard' %}" class="btn btn-secondary">← Go to Dashboard</a>
-    </div>
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="mb-4">Table 6 - IEC Materials</h2>
+            <a href="{% url 'reports_dashboard' %}" class="btn btn-secondary">← Go to Dashboard</a>
+        </div>
 
-    <!-- Add Form -->
-    <div class="card mb-4">
-      <div class="card-header">Add New IEC Material</div>
-      <div class="card-body">
-        <form method="POST">
-          {% csrf_token %}
-          {{ form.as_p }}
-          <button type="submit" class="btn btn-success">Save</button>
-        </form>
-      </div>
-    </div>
+        <!-- Add Form -->
+        <div class="card mb-4">
+            <div class="card-header">Add New Entry</div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <h5 class="mt-3">Lead Unit</h5>
+                    {{ form.department_unit.errors }}
+                    <div class="mb-3">
+                        {{ form.department_unit.label_tag }}
+                        {{ form.department_unit }}
+                    </div>
+                    {{ form.contact_person.errors }}
+                    <div class="mb-3">
+                        {{ form.contact_person.label_tag }}
+                        {{ form.contact_person }}
+                    </div>
+                    {{ form.contact_number_email.errors }}
+                    <div class="mb-3">
+                        {{ form.contact_number_email.label_tag }}
+                        {{ form.contact_number_email }}
+                    </div>
 
-    <!-- Data Table -->
-    <table class="table table-bordered table-striped">
-      <thead class="table-dark">
-        <tr>
-          <th>ID</th>
-          <th>Title</th>
-          <th>Format</th>
-          <th>Male</th>
-          <th>Female</th>
-          <th>Total</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for row in rows %}
-        <tr>
-          <td>{{ row.id }}</td>
-          <td>{{ row.title }}</td>
-          <td>{{ row.format }}</td>
-          <td>{{ row.male_recipients }}</td>
-          <td>{{ row.female_recipients }}</td>
-          <td>{{ row.total_recipients }}</td>
-          <td>
-            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editModal{{ row.id }}">Edit</button>
-            <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ row.id }}">Delete</button>
-          </td>
-        </tr>
+                    <h5 class="mt-3">IEC Material Details</h5>
+                    {{ form.code.errors }}
+                    <div class="mb-3">
+                        {{ form.code.label_tag }}
+                        {{ form.code }}
+                    </div>
+                    {{ form.title.errors }}
+                    <div class="mb-3">
+                        {{ form.title.label_tag }}
+                        {{ form.title }}
+                    </div>
+                    {{ form.format.errors }}
+                    <div class="mb-3">
+                        {{ form.format.label_tag }}
+                        {{ form.format }}
+                    </div>
 
-        <!-- Edit Modal -->
-        <div class="modal fade" id="editModal{{ row.id }}" tabindex="-1">
-          <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-              <form method="POST" action="{% url 'table6_edit' row.id %}">
-                {% csrf_token %}
-                <div class="modal-header">
-                  <h5 class="modal-title">Edit IEC Material</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                  <input type="text" name="title" value="{{ row.title }}" class="form-control mb-2" placeholder="Title">
-                  <input type="text" name="format" value="{{ row.format }}" class="form-control mb-2" placeholder="Format">
-                  <input type="number" name="male_recipients" value="{{ row.male_recipients }}" class="form-control mb-2" placeholder="Male">
-                  <input type="number" name="female_recipients" value="{{ row.female_recipients }}" class="form-control mb-2" placeholder="Female">
-                  <input type="number" name="total_recipients" value="{{ row.total_recipients }}" class="form-control mb-2" placeholder="Total">
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                  <button type="submit" class="btn btn-primary">Save</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
+                    <h5 class="mt-3">No. of recipients by sex</h5>
+                    {{ form.male_recipients.errors }}
+                    <div class="mb-3">
+                        {{ form.male_recipients.label_tag }}
+                        <input type="number" class="form-control" name="male_recipients" id="id_male_recipients" value="{{ form.male_recipients.value|default:0 }}">
+                    </div>
+                    {{ form.female_recipients.errors }}
+                    <div class="mb-3">
+                        {{ form.female_recipients.label_tag }}
+                        <input type="number" class="form-control" name="female_recipients" id="id_female_recipients" value="{{ form.female_recipients.value|default:0 }}">
+                    </div>
 
-        <!-- Delete Modal -->
-        <div class="modal fade" id="deleteModal{{ row.id }}" tabindex="-1">
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <form method="POST" action="{% url 'table6_delete' row.id %}">
-                {% csrf_token %}
-                <div class="modal-header">
-                  <h5 class="modal-title">Confirm Delete</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                  Delete IEC material <strong>{{ row.title }}</strong>?
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                  <button type="submit" class="btn btn-danger">Delete</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
+                    <h5 class="mt-3">No. of recipients by category</h5>
+                    {{ form.student_recipients.errors }}
+                    <div class="mb-3">
+                        {{ form.student_recipients.label_tag }}
+                        <input type="number" class="form-control" name="student_recipients" id="id_student_recipients" value="{{ form.student_recipients.value|default:0 }}">
+                    </div>
+                    {{ form.farmer_recipients.errors }}
+                    <div class="mb-3">
+                        {{ form.farmer_recipients.label_tag }}
+                        <input type="number" class="form-control" name="farmer_recipients" id="id_farmer_recipients" value="{{ form.farmer_recipients.value|default:0 }}">
+                    </div>
+                    {{ form.fisherfolk_recipients.errors }}
+                    <div class="mb-3">
+                        {{ form.fisherfolk_recipients.label_tag }}
+                        <input type="number" class="form-control" name="fisherfolk_recipients" id="id_fisherfolk_recipients" value="{{ form.fisherfolk_recipients.value|default:0 }}">
+                    </div>
+                    {{ form.ag_technician_recipients.errors }}
+                    <div class="mb-3">
+                        {{ form.ag_technician_recipients.label_tag }}
+                        <input type="number" class="form-control" name="ag_technician_recipients" id="id_ag_technician_recipients" value="{{ form.ag_technician_recipients.value|default:0 }}">
+                    </div>
+                    {{ form.gov_employee_recipients.errors }}
+                    <div class="mb-3">
+                        {{ form.gov_employee_recipients.label_tag }}
+                        <input type="number" class="form-control" name="gov_employee_recipients" id="id_gov_employee_recipients" value="{{ form.gov_employee_recipients.value|default:0 }}">
+                    </div>
+                    <!-- Corrected fields -->
+                    {{ form.priv_employee_recipients.errors }}
+                    <div class="mb-3">
+                        <label for="id_priv_employee_recipients" class="form-label">Private employee recipients:</label>
+                        <input type="number" class="form-control" name="priv_employee_recipients" id="id_priv_employee_recipients" value="{{ form.priv_employee_recipients.value|default:0 }}">
+                    </div>
+                    {{ form.other_recipients.errors }}
+                    <div class="mb-3">
+                        <label for="id_other_recipients" class="form-label">Other recipients:</label>
+                        <input type="number" class="form-control" name="other_recipients" id="id_other_recipients" value="{{ form.other_recipients.value|default:0 }}">
+                    </div>
+                    
+                    <!-- Supporting Documents Field -->
+                    <div class="mb-3">
+                        {{ form.supporting_documents.errors }}
+                        <label for="id_supporting_documents" class="form-label">Supporting Documents:</label>
+                        <input type="file" class="form-control" name="supporting_documents" id="id_supporting_documents" multiple>
+                        <small class="form-text text-muted">Select multiple files (e.g., PDF, images) if needed.</small>
+                    </div>
 
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+                    <button type="submit" class="btn btn-success">Save</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>No.</th>
+                        <th>Code</th>
+                        <th>Title</th>
+                        <th>Format</th>
+                        <th>Male Recipients</th>
+                        <th>Female Recipients</th>
+                        <th>Total Recipients</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                    <tr>
+                        <td>{{ row.id }}</td>
+                        <td>{{ row.no }}</td>
+                        <td>{{ row.code }}</td>
+                        <td>{{ row.title }}</td>
+                        <td>{{ row.format }}</td>
+                        <td>{{ row.male_recipients }}</td>
+                        <td>{{ row.female_recipients }}</td>
+                        <td>{{ row.total_recipients }}</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editModal{{ row.id }}">Edit</button>
+                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ row.id }}">Delete</button>
+                        </td>
+                    </tr>
+
+                    <!-- Edit Modal -->
+                    <div class="modal fade" id="editModal{{ row.id }}" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <!-- IMPORTANT: Add enctype for file uploads -->
+                                <form method="POST" action="{% url 'table6_edit' row.id %}" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Edit IEC Material Entry</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <h5 class="mt-3">Lead Unit</h5>
+                                        {{ form.department_unit.errors }}
+                                        <div class="mb-3">
+                                            {{ form.department_unit.label_tag }}
+                                            {{ form.department_unit }}
+                                        </div>
+                                        {{ form.contact_person.errors }}
+                                        <div class="mb-3">
+                                            {{ form.contact_person.label_tag }}
+                                            {{ form.contact_person }}
+                                        </div>
+                                        {{ form.contact_number_email.errors }}
+                                        <div class="mb-3">
+                                            {{ form.contact_number_email.label_tag }}
+                                            {{ form.contact_number_email }}
+                                        </div>
+
+                                        <h5 class="mt-3">IEC Material Details</h5>
+                                        {{ form.code.errors }}
+                                        <div class="mb-3">
+                                            {{ form.code.label_tag }}
+                                            {{ form.code }}
+                                        </div>
+                                        {{ form.title.errors }}
+                                        <div class="mb-3">
+                                            {{ form.title.label_tag }}
+                                            {{ form.title }}
+                                        </div>
+                                        {{ form.format.errors }}
+                                        <div class="mb-3">
+                                            {{ form.format.label_tag }}
+                                            {{ form.format }}
+                                        </div>
+
+                                        <h5 class="mt-3">No. of recipients by sex</h5>
+                                        {{ form.male_recipients.errors }}
+                                        <div class="mb-3">
+                                            <label for="edit_male_recipients_{{ row.id }}" class="form-label">Male recipients:</label>
+                                            <input type="number" class="form-control" name="male_recipients" id="edit_male_recipients_{{ row.id }}" value="{{ row.male_recipients|default:0 }}">
+                                        </div>
+                                        {{ form.female_recipients.errors }}
+                                        <div class="mb-3">
+                                            <label for="edit_female_recipients_{{ row.id }}" class="form-label">Female recipients:</label>
+                                            <input type="number" class="form-control" name="female_recipients" id="edit_female_recipients_{{ row.id }}" value="{{ row.female_recipients|default:0 }}">
+                                        </div>
+
+                                        <h5 class="mt-3">No. of recipients by category</h5>
+                                        {{ form.student_recipients.errors }}
+                                        <div class="mb-3">
+                                            <label for="edit_student_recipients_{{ row.id }}" class="form-label">Student recipients:</label>
+                                            <input type="number" class="form-control" name="student_recipients" id="edit_student_recipients_{{ row.id }}" value="{{ row.student_recipients|default:0 }}">
+                                        </div>
+                                        {{ form.farmer_recipients.errors }}
+                                        <div class="mb-3">
+                                            <label for="edit_farmer_recipients_{{ row.id }}" class="form-label">Farmer recipients:</label>
+                                            <input type="number" class="form-control" name="farmer_recipients" id="edit_farmer_recipients_{{ row.id }}" value="{{ row.farmer_recipients|default:0 }}">
+                                        </div>
+                                        {{ form.fisherfolk_recipients.errors }}
+                                        <div class="mb-3">
+                                            <label for="edit_fisherfolk_recipients_{{ row.id }}" class="form-label">Fisherfolk recipients:</label>
+                                            <input type="number" class="form-control" name="fisherfolk_recipients" id="edit_fisherfolk_recipients_{{ row.id }}" value="{{ row.fisherfolk_recipients|default:0 }}">
+                                        </div>
+                                        {{ form.ag_technician_recipients.errors }}
+                                        <div class="mb-3">
+                                            <label for="edit_ag_technician_recipients_{{ row.id }}" class="form-label">Ag technician recipients:</label>
+                                            <input type="number" class="form-control" name="ag_technician_recipients" id="edit_ag_technician_recipients_{{ row.id }}" value="{{ row.ag_technician_recipients|default:0 }}">
+                                        </div>
+                                        {{ form.gov_employee_recipients.errors }}
+                                        <div class="mb-3">
+                                            <label for="edit_gov_employee_recipients_{{ row.id }}" class="form-label">Gov employee recipients:</label>
+                                            <input type="number" class="form-control" name="gov_employee_recipients" id="edit_gov_employee_recipients_{{ row.id }}" value="{{ row.gov_employee_recipients|default:0 }}">
+                                        </div>
+                                        {{ form.priv_employee_recipients.errors }}
+                                        <div class="mb-3">
+                                            <label for="edit_priv_employee_recipients_{{ row.id }}" class="form-label">Private employee recipients:</label>
+                                            <input type="number" class="form-control" name="priv_employee_recipients" id="edit_priv_employee_recipients_{{ row.id }}" value="{{ row.priv_employee_recipients|default:0 }}">
+                                        </div>
+                                        {{ form.other_recipients.errors }}
+                                        <div class="mb-3">
+                                            <label for="edit_other_recipients_{{ row.id }}" class="form-label">Other recipients:</label>
+                                            <input type="number" class="form-control" name="other_recipients" id="edit_other_recipients_{{ row.id }}" value="{{ row.other_recipients|default:0 }}">
+                                        </div>
+                                        
+                                        <!-- Supporting Documents field for editing -->
+                                        <div class="mb-3">
+                                            <label for="edit_files_{{ row.id }}" class="form-label">Upload New Documents:</label>
+                                            <input type="file" class="form-control" name="supporting_documents" id="edit_files_{{ row.id }}" multiple>
+                                            <small class="form-text text-muted">Existing documents will be retained. Upload new ones to add them.</small>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary">Save</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delete Modal -->
+                    <div class="modal fade" id="deleteModal{{ row.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <form method="POST" action="{% url 'table6_delete' row.id %}">
+                                    {% csrf_token %}
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Confirm Delete</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Delete IEC material entry for <strong>{{ row.title }}</strong>?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
