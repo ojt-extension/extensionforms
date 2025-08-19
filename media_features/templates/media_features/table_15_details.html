@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Submission Details - {{ submission.form_name }}</title>
+    <link rel="stylesheet" href="{% static 'media_features/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'admin_dashboard' %}" class="back-link">← Back to Admin Dashboard</a>
+        <hr>
+        
+        <h1>Submission Details</h1>
+        
+        <h3>Form: {{ submission.form_name }}</h3>
+        <p><strong>Submitted by:</strong> {{ submission.submitter.get_full_name }}</p>
+        <p><strong>Submitted on:</strong> {{ submission.submitted_at|date:"F d, Y P" }}</p>
+
+        <hr>
+
+        <h4>Form Data:</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Date Conducted</td>
+                    <td>{{ form_data.date_conducted }}</td>
+                </tr>
+                <tr>
+                    <td>Activity Title</td>
+                    <td>{{ form_data.activity_title }}</td>
+                </tr>
+                <tr>
+                    <td>Category</td>
+                    <td>{{ form_data.get_category_display }}</td>
+                </tr>
+                <tr>
+                    <td>Participants</td>
+                    <td>{{ form_data.participants }}</td>
+                </tr>
+                <tr>
+                    <td>Purpose</td>
+                    <td>{{ form_data.purpose }}</td>
+                </tr>
+                <tr>
+                    <td>Amount Spent</td>
+                    <td>{{ form_data.amount_spent|default:"—" }}</td>
+                </tr>
+                <tr>
+                    <td>Source of Funds</td>
+                    <td>{{ form_data.source_of_funds }}</td>
+                </tr>
+                <tr>
+                    

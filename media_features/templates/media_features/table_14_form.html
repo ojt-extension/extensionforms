@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table 14. Awards Form</title>
+    <link rel="stylesheet" href="{% static 'media_features/style.css' %}">
+    <script src="{% static 'media_features/scripts.js' %}"></script>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'reports_dashboard' %}" style="text-decoration: none; color: #000;">
+            <p style="margin-bottom: 20px;">&larr; Back to Dashboard</p>
+        </a>
+        <h1>Table 14. Awards Form</h1>
+
+        {# Django messages display #}
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-container">
+            <form method="post" enctype="multipart/form-data"> {% csrf_token %}
+                
+                <div class="form-group">
+                    {{ form.department.label_tag }}
+                    {{ form.department }}
+                </div>
+                
+                <div class="form-group">
+                    {{ form.person_received_award.label_tag }}
+                    {{ form.person_received_award }}
+                </div>
+                
+                <div class="form-group">
+                    {{ form.award_title.label_tag }}
+                    {{ form.award_title }}
+                </div>
+                
+                <div class="form-group">
+                    {{ form.award_donor.label_tag }}
+                    {{ form.award_donor }}
+                </div>
+                
+                <div class="form-group">
+                    {{ form.level_of_award.label_tag }}
+                    {{ form.level_of_award }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.date_received.label_tag }}
+                    {{ form.date_received }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.remarks.label_tag }}
+                    {{ form.remarks }}
+                </div>
+
+                <div class="form-group">
+                    <label for="files">Supporting Documents:</label>
+                     <p class="form-note">
+                         *Supporting documentation for awards
+                    </p>
+                    <input type="file" name="files" id="files" multiple class="form-input">
+                </div>
+
+                <button type="submit" class="btn">Submit</button>
+            </form>
+        </div>
+
+        <h2>Existing Records</h2>
+
+        <div class="table-container">
+            {% if awards %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Department</th>
+                        <th>Person Received Award</th>
+                        <th>Award Title</th>
+                        <th>Award Donor</th>
+                        <th>Level of Award</th>
+                        <th>Date Received</th>
+                        <th>Remarks</th>
+                        <th>Supporting Documents</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for award in awards %}
+                    <tr>
+                        <td>{{ award.department }}</td>
+                        <td>{{ award.person_received_award }}</td>
+                        <td>{{ award.award_title }}</td>
+                        <td>{{ award.award_donor }}</td>
+                        <td>{{ award.get_level_of_award_display }}</td>
+                        <td>{{ award.date_received }}</td>
+                        <td>{{ award.remarks|default:"—" }}</td>
+                        <td>
+                            {% for doc in award.supporting_documents.all %}
+                                <a href="{{ doc.file.url }}" target="_blank">{{ doc.file.name|cut:"supporting_documents/" }}</a>
+                                {% if not forloop.last %}, {% endif %}
+                            {% empty %}
+                                —
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="no-data">No awards recorded yet.</p>
+            {% endif %}
+        </div>
+
+    </div>
+</body>
+</html>

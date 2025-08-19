@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Submission Details - {{ submission.form_name }}</title>
+    <link rel="stylesheet" href="{% static 'media_features/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'admin_dashboard' %}" class="back-link">← Back to Admin Dashboard</a>
+        <hr>
+        
+        <h1>Submission Details</h1>
+        
+        <h3>Form: {{ submission.form_name }}</h3>
+        <p><strong>Submitted by:</strong> {{ submission.submitter.get_full_name }}</p>
+        <p><strong>Submitted on:</strong> {{ submission.submitted_at|date:"F d, Y P" }}</p>
+
+        <hr>
+
+        <h4>Form Data:</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Department</td>
+                    <td>{{ form_data.department }}</td>
+                </tr>
+                <tr>
+                    <td>Person Received Award</td>
+                    <td>{{ form_data.person_received_award }}</td>
+                </tr>
+                <tr>
+                    <td>Award Title</td>
+                    <td>{{ form_data.award_title }}</td>
+                </tr>
+                <tr>
+                    <td>Award Donor</td>
+                    <td>{{ form_data.award_donor }}</td>
+                </tr>
+                <tr>
+                    <td>Level of Award</td>
+                    <td>{{ form_data.get_level_of_award_display }}</td>
+                </tr>
+                <tr>
+                    <td>Date Received</td>
+                    <td>{{ form_data.date_received }}</td>
+                </tr>
+                <tr>
+                    <td>Remarks</td>
+                    <td>{{ form_data.remarks|default:"—" }}</td>
+                </tr>
+            </tbody>
+        </table>
+               {% if form_data.supporting_documents %}
+                    <h4 class="mt-8">Supporting Documents:</h4>
+                    <ul class="file-list">
+                {% for doc in form_data.supporting_documents %}
+                  <li><a href="{{ doc.url }}" target="_blank">{{ doc.name }}</a></li>
+                {% endfor %}
+</ul>
+{% else %}
+<p class="mt-4">No supporting documents uploaded.</p>
+{% endif %}
+    </div>
+</body>
+</html>

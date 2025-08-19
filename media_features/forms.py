@@ -1,7 +1,7 @@
 #media_features/forms.py
 from django import forms
 from django.utils import timezone
-from .models import ExtensionPPAFeatured, ExtensionPPA, MediaOutlet, StudentExtensionInvolvement, Technology, Department, TechnologyStatus, CurricularOffering, FacultyInvolvement
+from .models import ExtensionPPAFeatured, ExtensionPPA, MediaOutlet, StudentExtensionInvolvement, Technology, Department, TechnologyStatus, CurricularOffering, FacultyInvolvement, Ordinance, ImpactAssessment, Awards, OtherActivities
 
 
     
@@ -211,3 +211,141 @@ class FacultyInvolvementForm(forms.ModelForm):
             else:
                 # Default fallback
                 field.widget.attrs.update({'class': 'form-input'})
+
+class OrdinanceForm(forms.ModelForm):
+    class Meta:
+        model = Ordinance
+        fields = [
+            'department',
+            'curricular_offering',
+            'extension_ppa',
+            'ordinance_title',
+            'status', 
+            'date_approved', 
+            'remarks'
+        ]
+        widgets = {
+            'department': forms.Select(attrs={'class': 'form-select'}),
+            'curricular_offering': forms.Select(attrs={'class': 'form-select'}),
+            'extension_ppa': forms.Select(attrs={'class': 'form-select'}),
+            'ordinance_title': forms.TextInput(attrs={'class': 'form-input'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'date_approved': forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}),
+            'remarks': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 3})
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Apply the correct CSS classes based on field type
+        for field_name, field in self.fields.items():
+            if isinstance(field.widget, forms.TextInput):
+                field.widget.attrs.update({'class': 'form-input'})
+            elif isinstance(field.widget, forms.Select):
+                field.widget.attrs.update({'class': 'form-select'})
+            elif isinstance(field.widget, forms.Textarea):
+                field.widget.attrs.update({'class': 'form-textarea'})
+            elif isinstance(field.widget, forms.DateInput):
+                field.widget.attrs.update({'class': 'form-input'})
+
+class ImpactAssessmentForm(forms.ModelForm):
+    class Meta:
+        model = ImpactAssessment
+        fields = [
+            'department',
+            'curricular_offering',
+            'extension_ppa_ia',
+            'proponent_ias',
+            'date_conducted',
+            'remarks'
+        ]
+        widgets = {
+            'department': forms.Select(attrs={'class': 'form-select'}),
+            'curricular_offering': forms.Select(attrs={'class': 'form-select'}),
+            'extension_ppa_ia': forms.Select(attrs={'class': 'form-select'}),
+            'proponent_ias': forms.TextInput(attrs={'class': 'form-input'}),
+            'date_conducted': forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}),
+            'remarks': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 3})
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Apply the correct CSS classes based on field type
+        for field_name, field in self.fields.items():
+            if isinstance(field.widget, forms.TextInput):
+                field.widget.attrs.update({'class': 'form-input'})
+            elif isinstance(field.widget, forms.Select):
+                field.widget.attrs.update({'class': 'form-select'})
+            elif isinstance(field.widget, forms.Textarea):
+                field.widget.attrs.update({'class': 'form-textarea'})
+
+class AwardsForm(forms.ModelForm):
+    class Meta:
+        model = Awards
+        fields = [
+            'department',
+            'person_received_award',
+            'award_title',
+            'award_donor',
+            'level_of_award',
+            'date_received',
+            'remarks'
+        ]
+        widgets = {
+            'department': forms.Select(attrs={'class': 'form-select'}),
+            'person_received_award': forms.TextInput(attrs={'class': 'form-input'}),
+            'award_title': forms.TextInput(attrs={'class': 'form-input'}),
+            'award_donor': forms.TextInput(attrs={'class': 'form-input'}),
+            'level_of_award': forms.Select(attrs={'class': 'form-select'}),
+            'date_received': forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}),
+            'remarks': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 3})
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Apply the correct CSS classes based on field type
+        for field_name, field in self.fields.items():
+            if isinstance(field.widget, forms.TextInput):
+                field.widget.attrs.update({'class': 'form-input'})
+            elif isinstance(field.widget, forms.Select):
+                field.widget.attrs.update({'class': 'form-select'})
+            elif isinstance(field.widget, forms.Textarea):
+                field.widget.attrs.update({'class': 'form-textarea'})
+            
+class OtherActivitiesForm(forms.ModelForm):
+    class Meta:
+        model = OtherActivities
+        fields = [
+            'date_conducted',
+            'activity_title',
+            'category',
+            'participants',
+            'purpose',
+            'amount_spent',
+            'source_of_funds',
+            'remarks'
+        ]
+        widgets = {
+            'date_conducted': forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}),
+            'activity_title': forms.TextInput(attrs={'class': 'form-input'}),
+            'category': forms.Select(attrs={'class': 'form-select'}),
+            'participants': forms.TextInput(attrs={'class': 'form-input'}),
+            'purpose': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 3}),
+            'amount_spent': forms.NumberInput(attrs={'class': 'form-input'}),
+            'source_of_funds': forms.TextInput(attrs={'class': 'form-input'}),
+            'remarks': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 3})
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Apply the correct CSS classes based on field type
+        for field_name, field in self.fields.items():
+            if isinstance(field.widget, forms.TextInput):
+                field.widget.attrs.update({'class': 'form-input'})
+            elif isinstance(field.widget, forms.Select):
+                field.widget.attrs.update({'class': 'form-select'})
+            elif isinstance(field.widget, forms.Textarea):
+                field.widget.attrs.update({'class': 'form-textarea'})

@@ -9,15 +9,22 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
 from openpyxl.utils import get_column_letter
 
-from .forms import ExtensionPPAFeaturedForm, TechnologyForm, StudentExtensionInvolvementForm, FacultyInvolvementForm
-from .models import ExtensionPPAFeatured, ExtensionPPA, MediaOutlet, SupportingDocument, StudentExtensionInvolvement
-from .models import Technology, Department, CurricularOffering, FormSubmission, FacultyInvolvement
+from .forms import (
+    ExtensionPPAFeaturedForm, TechnologyForm, StudentExtensionInvolvementForm, 
+    FacultyInvolvementForm, OrdinanceForm, ImpactAssessmentForm, AwardsForm, OtherActivitiesForm
+)
+from .models import (
+    ExtensionPPAFeatured, ExtensionPPA, MediaOutlet, SupportingDocument, StudentExtensionInvolvement,
+    Technology, Department, CurricularOffering, FormSubmission, FacultyInvolvement,
+    Ordinance, ImpactAssessment, Awards, OtherActivities
+)
 from adopters_features.models import (
     Table5Adopter, Table6IEC, Table7aBudgetGAA, Table7bBudgetIncome
 )
 import json # Import json to handle the form_data JSONField
 # from your_app_name.models import TechnologyCommercialized # Example for Table 11
 
+@login_required
 def reports_dashboard(request):
     """
     Renders the main dashboard page with links to all forms.
@@ -27,6 +34,10 @@ def reports_dashboard(request):
         {'name': 'Table 9: Student Involvement in ESCE', 'url_name': 'table_9_form'},
         {'name': 'Table 10: ES Activities Featured Forms', 'url_name': 'table_10_form'},
         {'name': 'Table 11: Technologies Commercialized', 'url_name': 'table_11_form'},
+        {'name': 'Table 12: Ordinance Form', 'url_name': 'table_12_form'},
+        {'name': 'Table 13: Impact Assessment Form', 'url_name': 'table_13_form'},
+        {'name': 'Table 14: Awards Form', 'url_name': 'table_14_form'},
+        {'name': 'Table 15: Other Activities Form', 'url_name': 'table_15_form'},
         
     ]
     return render(request, 'media_features/dashboard.html', {'forms': forms})
@@ -161,13 +172,248 @@ def technology_commercialized_form(request):
     }
     return render(request, 'media_features/table_11_form.html', context)
 
+@login_required
+def ordinance_form(request):
+    """
+    Handles the display and submission of the ordinance form.
+    """
+    if request.method == 'POST':
+        form = OrdinanceForm(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                ordinance_instance = form.save()
+                
+                # Handle file uploads
+                document_data = []
+                files = request.FILES.getlist('files')
+                for file in files:
+                    doc = SupportingDocument.objects.create(
+                        ordinance=ordinance_instance,
+                        file=file,
+                        submitter=request.user
+                    )
+                    document_data.append({
+                        'name': doc.file.name.split('/')[-1],
+                        'url': doc.file.url
+                    })
+                
+                # Create FormSubmission record
+                form_data_dict = {
+                    'department': ordinance_instance.department.department_name,
+                    'curricular_offering': ordinance_instance.curricular_offering.offering_name if ordinance_instance.curricular_offering else None,  # FIXED: changed from circular_offering
+                    'extension_ppa': ordinance_instance.extension_ppa.ppa_name if ordinance_instance.extension_ppa else None,
+                    'ordinance_title': ordinance_instance.ordinance_title,
+                    'status': ordinance_instance.status,
+                    'date_approved': str(ordinance_instance.date_approved) if ordinance_instance.date_approved else None,
+                    'remarks': ordinance_instance.remarks,
+                    'supporting_documents': document_data
+                }
+                
+                FormSubmission.objects.create(
+                    submitter=request.user,
+                    form_name='Ordinance Form',
+                    form_data=form_data_dict,
+                    form_instance_id=ordinance_instance.pk
+                )
+                
+                messages.success(request, 'Ordinance record added successfully!')
+                return redirect('table_12_form')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = OrdinanceForm()
+    
+    ordinances = Ordinance.objects.select_related('department', 'curricular_offering', 'extension_ppa').all().order_by('-date_approved')  # FIXED: changed from circular_offering
+    
+    context = {
+        'form': form,
+        'ordinances': ordinances
+    }
+    return render(request, 'media_features/table_12_form.html', context)
+
+@login_required
+def impact_assessment_form(request):
+    """
+    Handles the display and submission of the impact assessment form.
+    """
+    if request.method == 'POST':
+        form = ImpactAssessmentForm(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                assessment_instance = form.save()
+                
+                # Handle file uploads
+                document_data = []
+                files = request.FILES.getlist('files')
+                for file in files:
+                    doc = SupportingDocument.objects.create(
+                        impact_assessment=assessment_instance,  # You'll need to add this field to SupportingDocument
+                        file=file,
+                        submitter=request.user
+                    )
+                    document_data.append({
+                        'name': doc.file.name.split('/')[-1],
+                        'url': doc.file.url
+                    })
+                
+                # Create FormSubmission record
+                form_data_dict = {
+                    'department': assessment_instance.department.department_name,
+                    'curricular_offering': assessment_instance.curricular_offering.offering_name,
+                    'extension_ppa_ia': assessment_instance.extension_ppa_ia.ppa_name,
+                    'proponent_ias': assessment_instance.proponent_ias,
+                    'date_conducted': str(assessment_instance.date_conducted),
+                    'remarks': assessment_instance.remarks,
+                    'supporting_documents': document_data
+                }
+                
+                FormSubmission.objects.create(
+                    submitter=request.user,
+                    form_name='Impact Assessment Form',
+                    form_data=form_data_dict,
+                    form_instance_id=assessment_instance.pk
+                )
+                
+                messages.success(request, 'Impact assessment record added successfully!')
+                return redirect('table_13_form')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = ImpactAssessmentForm()
+    
+    assessments = ImpactAssessment.objects.select_related('department', 'curricular_offering', 'extension_ppa_ia').all().order_by('-date_conducted')
+    
+    context = {
+        'form': form,
+        'assessments': assessments
+    }
+    return render(request, 'media_features/table_13_form.html', context)
+
+@login_required
+def awards_form(request):
+    """
+    Handles the display and submission of the awards form.
+    """
+    if request.method == 'POST':
+        form = AwardsForm(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                award_instance = form.save()
+                
+                # Handle file uploads
+                document_data = []
+                files = request.FILES.getlist('files')
+                for file in files:
+                    doc = SupportingDocument.objects.create(
+                        award=award_instance,  # You'll need to add this field to SupportingDocument
+                        file=file,
+                        submitter=request.user
+                    )
+                    document_data.append({
+                        'name': doc.file.name.split('/')[-1],
+                        'url': doc.file.url
+                    })
+                
+                # Create FormSubmission record
+                form_data_dict = {
+                    'department': award_instance.department.department_name,
+                    'person_received_award': award_instance.person_received_award,
+                    'award_title': award_instance.award_title,
+                    'award_donor': award_instance.award_donor,
+                    'level_of_award': award_instance.level_of_award,
+                    'date_received': str(award_instance.date_received),
+                    'remarks': award_instance.remarks,
+                    'supporting_documents': document_data
+                }
+                
+                FormSubmission.objects.create(
+                    submitter=request.user,
+                    form_name='Awards Form',
+                    form_data=form_data_dict,
+                    form_instance_id=award_instance.pk
+                )
+                
+                messages.success(request, 'Award record added successfully!')
+                return redirect('table_14_form')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = AwardsForm()
+    
+    awards = Awards.objects.select_related('department').all().order_by('-date_received')
+    
+    context = {
+        'form': form,
+        'awards': awards
+    }
+    return render(request, 'media_features/table_14_form.html', context)
+
+@login_required
+def other_activities_form(request):
+    """
+    Handles the display and submission of the other activities form.
+    """
+    if request.method == 'POST':
+        form = OtherActivitiesForm(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                activity_instance = form.save()
+                
+                # Handle file uploads
+                document_data = []
+                files = request.FILES.getlist('files')
+                for file in files:
+                    doc = SupportingDocument.objects.create(
+                        other_activity=activity_instance,  # You'll need to add this field to SupportingDocument
+                        file=file,
+                        submitter=request.user
+                    )
+                    document_data.append({
+                        'name': doc.file.name.split('/')[-1],
+                        'url': doc.file.url
+                    })
+                
+                # Create FormSubmission record
+                form_data_dict = {
+                    'date_conducted': str(activity_instance.date_conducted),
+                    'activity_title': activity_instance.activity_title,
+                    'category': activity_instance.category,
+                    'participants': activity_instance.participants,
+                    'purpose': activity_instance.purpose,
+                    'amount_spent': float(activity_instance.amount_spent) if activity_instance.amount_spent else None,
+                    'source_of_funds': activity_instance.source_of_funds,
+                    'remarks': activity_instance.remarks,
+                    'supporting_documents': document_data
+                }
+                
+                FormSubmission.objects.create(
+                    submitter=request.user,
+                    form_name='Other Activities Form',
+                    form_data=form_data_dict,
+                    form_instance_id=activity_instance.pk
+                )
+                
+                messages.success(request, 'Other activity record added successfully!')
+                return redirect('table_15_form')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = OtherActivitiesForm()
+    
+    activities = OtherActivities.objects.all().order_by('-date_conducted')
+    
+    context = {
+        'form': form,
+        'activities': activities
+    }
+    return render(request, 'media_features/table_15_form.html', context)
+
 def get_curricular_offerings(request, department_id):
     """
     Returns a JSON response of curricular offerings for a given department.
     """
-    offerings = CurricularOffering.objects.filter(department_id=department_id).values('curricular_offering_id', 'offering_name')
+    offerings = CurricularOffering.objects.filter(department_id=department_id).values('curricular_offering_name', 'offering_name')
     return JsonResponse(list(offerings), safe=False)
-
 
 # NEW: This is the main, centralized export function
 def export_all_to_excel(request):
@@ -197,12 +443,19 @@ def export_all_to_excel(request):
             related_name = 'extension_ppa_featured'
         elif model_name == 'technology':
             related_name = 'technology'
+        elif model_name == 'ordinance':
+            related_name = 'ordinance'
+        elif model_name == 'impactassessment':
+            related_name = 'impact_assessment'
+        elif model_name == 'awards':
+            related_name = 'award'
+        elif model_name == 'otheractivities':
+            related_name = 'other_activity'
         
         docs = SupportingDocument.objects.filter(**{related_name: self})
         return ", ".join([f"{base_url}{doc.file.url}" for doc in docs])
 
     
-
     def get_curricular_offerings(self):
         return ", ".join([offering.offering_name for offering in self.curricular_offerings.all()])
 
@@ -211,6 +464,10 @@ def export_all_to_excel(request):
     Technology.add_to_class('supporting_documents_list', get_supporting_documents)
     Technology.add_to_class('curricular_offerings_list', get_curricular_offerings)
     StudentExtensionInvolvement.add_to_class('supporting_documents_list', get_supporting_documents)
+    Ordinance.add_to_class('supporting_documents_list', get_supporting_documents)
+    ImpactAssessment.add_to_class('supporting_documents_list', get_supporting_documents)
+    Awards.add_to_class('supporting_documents_list', get_supporting_documents)
+    OtherActivities.add_to_class('supporting_documents_list', get_supporting_documents)
 
     # Dictionary defining the tables to export and their configurations
     tables = {
@@ -460,6 +717,102 @@ def export_all_to_excel(request):
             ],
             'notes': ['', '', '', '', '', '', '', '1. Photo and IEC material about the technology\n2. Documentation of deployment, commercialization, and pre-commercialization activities']
         },
+        'Table 12 - Ordinance': {
+            'model': Ordinance,
+            'fields': [
+                'department__department_name',
+                'curricular_offering__offering_name',
+                'extension_ppa__ppa_name',
+                'ordinance_title',
+                'status',
+                'date_approved',
+                'remarks',
+                'supporting_documents_list'
+            ],
+            'headers': [
+                'Department',
+                'Curricular Offering',
+                'Extension PPA',
+                'Ordinance Title',
+                'Status',           
+                'Date Approved',
+                'Remarks',
+                'Supporting Documents'
+            ],
+            'notes': ['', '', '', '', '', '', '', '*Supporting documentation for ordinances']
+        },
+        'Table 13 - Impact Assessment': {
+            'model': ImpactAssessment,
+            'fields': [
+                'department__department_name',
+                'curricular_offering__offering_name',
+                'extension_ppa_ia__ppa_name',
+                'proponent_ias',
+                'date_conducted',
+                'remarks',
+                'supporting_documents_list'
+            ],
+            'headers': [
+                'Department',
+                'Curricular Offering',
+                'Extension PPA',
+                'Proponent/IAs',
+                'Date Conducted',
+                'Remarks',
+                'Supporting Documents'
+            ],
+            'notes': ['', '', '', '', '', '', '*Supporting documentation for impact assessments']
+        },
+        'Table 14 - Awards': {
+            'model': Awards,
+            'fields': [
+                'department__department_name',
+                'person_received_award',
+                'award_title',
+                'award_donor',
+                'level_of_award',
+                'date_received',
+                'remarks',
+                'supporting_documents_list'
+            ],
+            'headers': [
+                'Department',
+                'Person Received Award',
+                'Award Title',
+                'Award Donor',
+                'Level of Award',
+                'Date Received',
+                'Remarks',
+                'Supporting Documents'
+            ],
+            'notes': ['', '', '', '', '', '', '', '*Supporting documentation for awards']
+        },
+        'Table 15 - Other Activities': {
+            'model': OtherActivities,
+            'fields': [
+                'date_conducted',
+                'activity_title',
+                'category',
+                'participants',
+                'purpose',
+                'amount_spent',
+                'source_of_funds',
+                'remarks',
+                'supporting_documents_list'
+            ],
+            'headers': [
+                'Date Conducted',
+                'Activity Title',
+                'Category',
+                'Participants',
+                'Purpose',
+                'Amount Spent',
+                'Source of Funds',
+                'Remarks',
+                'Supporting Documents'
+            ],
+            'notes': ['', '', '', '', '', '', '', '', '*Supporting documentation for activities']
+        },
     }
 
     # Remove the default sheet created by openpyxl
@@ -496,6 +849,14 @@ def export_all_to_excel(request):
             queryset = queryset.select_related('department', 'technology_status').prefetch_related('curricular_offerings', 'supporting_documents')
         elif model == StudentExtensionInvolvement:
             queryset = queryset.select_related('department', 'curricular_offering').prefetch_related('supporting_documents')
+        elif model == Ordinance:
+            queryset = queryset.select_related('department', 'curricular_offering', 'extension_ppa').prefetch_related('supporting_documents')
+        elif model == ImpactAssessment:
+            queryset = queryset.select_related('department', 'curricular_offering', 'extension_ppa_ia').prefetch_related('supporting_documents')
+        elif model == Awards:
+            queryset = queryset.select_related('department').prefetch_related('supporting_documents')
+        elif model == OtherActivities:
+            queryset = queryset.prefetch_related('supporting_documents')
 
         # Write data rows
         start_row = 3
@@ -526,7 +887,7 @@ def export_all_to_excel(request):
     return response
 
 @login_required
-def student_involvement_form(request):
+def student_involvement_form(request): 
     if request.method == 'POST':
         form = StudentExtensionInvolvementForm(request.POST)
         files = request.FILES.getlist('files') # Get the uploaded files
@@ -581,7 +942,7 @@ def student_involvement_form(request):
     return render(request, 'media_features/table_9_form.html', context)
 
 
-
+@login_required
 def faculty_involvement_form(request):
     """
     Handles the display and submission of the faculty involvement form (Table 8).
@@ -670,3 +1031,31 @@ def technologies_details(request, submission_id):
     form_data = get_object_or_404(Technology, pk=submission.form_id)
     context = { 'submission': submission, 'form_data': form_data }
     return render(request, 'media_features/table_11_details.html', context)
+
+@login_required
+def ordinance_details(request, submission_id):
+    submission = get_object_or_404(FormSubmission, pk=submission_id)
+    form_data = get_object_or_404(Ordinance, pk=submission.form_instance_id)
+    context = { 'submission': submission, 'form_data': form_data }
+    return render(request, 'media_features/table_12_details.html', context)
+
+@login_required
+def impact_assessment_details(request, submission_id):
+    submission = get_object_or_404(FormSubmission, pk=submission_id)
+    form_data = get_object_or_404(ImpactAssessment, pk=submission.form_instance_id)
+    context = { 'submission': submission, 'form_data': form_data }
+    return render(request, 'media_features/table_13_details.html', context)
+
+@login_required
+def awards_details(request, submission_id):
+    submission = get_object_or_404(FormSubmission, pk=submission_id)
+    form_data = get_object_or_404(Awards, pk=submission.form_instance_id)
+    context = { 'submission': submission, 'form_data': form_data }
+    return render(request, 'media_features/table_14_details.html', context)
+
+@login_required
+def other_activities_details(request, submission_id):
+    submission = get_object_or_404(FormSubmission, pk=submission_id)
+    form_data = get_object_or_404(OtherActivities, pk=submission.form_instance_id)
+    context = { 'submission': submission, 'form_data': form_data }
+    return render(request, 'media_features/table_15_details.html', context)
