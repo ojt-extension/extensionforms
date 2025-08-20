@@ -7,6 +7,9 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 
 from .forms import OJTCoordinatorCreationForm, OJTCoordinatorLoginForm
+
+# Import all models needed for the dashboard and exports, including the new ones
+from adopters_features.models import Submission, Table5Adopter, Table6IEC, Table7aBudgetGAA, Table7bBudgetIncome
 from media_features.models import FormSubmission, ExtensionPPAFeatured, Technology, StudentExtensionInvolvement, FacultyInvolvement, SupportingDocument
 from openpyxl.utils import get_column_letter
 import openpyxl
@@ -62,12 +65,16 @@ def coordinator_logout(request):
 def admin_dashboard(request):
     """
     The custom dashboard for the superuser.
-    Shows a list of all submitted forms.
+    Shows a list of all submitted forms by querying the central Submission model.
     """
     if not request.user.is_superuser:
         return redirect('coordinator_dashboard')
         
-    submitted_forms = FormSubmission.objects.all().select_related('submitter')
+    # Query the central Submission model and prefetch related data
+    # This fetches data for all tables linked to a Submission in one query.
+    submitted_forms = Submission.objects.all().order_by('-submitted_at').select_related(
+        'table5_data', 'table6_data', 'table7a_data', 'table7b_data', 'submitter'
+    )
     
     context = {
         'submitted_forms': submitted_forms,
@@ -81,7 +88,6 @@ def coordinator_dashboard(request):
     This view now passes a list of forms to the template.
     """
     forms = [
-
         {'name': 'Table 10: Media Features', 'url_name': 'table_10_form'},
         {'name': 'Table 11: Technologies Commercialized', 'url_name': 'table_11_form'},
         # Add other forms here as needed
@@ -93,26 +99,13 @@ def coordinator_dashboard(request):
     return render(request, 'media_features/dashboard.html', context)
 
 @login_required
-def admin_dashboard(request):
-    """
-    The custom dashboard for the superuser.
-    Shows a list of all submitted forms.
-    """
-    if not request.user.is_superuser:
-        return redirect('coordinator_dashboard')
-        
-    submitted_forms = FormSubmission.objects.all().select_related('submitter')
-    
-    context = {
-        'submitted_forms': submitted_forms,
-    }
-    return render(request, 'accounts/admin_dashboard.html', context)
-
-@login_required
 def export_all_submissions(request):
     """
     Exports data from all specified models to a single Excel file,
     with each model on a separate worksheet.
+    
+    NOTE: You will need to add your new models (Table5Adopter, etc.)
+    to the 'tables' dictionary to include them in the export.
     """
     if not request.user.is_superuser:
         return redirect('coordinator_dashboard')
@@ -245,35 +238,61 @@ def export_all_submissions(request):
 
     workbook.save(response)
     return response
+
 def view_submission_details(request, submission_id):
     """
     Renders a detailed view of a single form submission.
+    This view now handles both old and new submission types.
     """
-    submission = get_object_or_404(FormSubmission, pk=submission_id)
+    try:
+        # First, try to get a Submission object (for the new tables)
+        submission = get_object_or_404(Submission, pk=submission_id)
+        
+        # Check which related table has data and set the context
+        if hasattr(submission, 'table5_data'):
+            template = 'adopters_features/table_5_details.html' # Assuming you've moved/copied this template
+            form_data = submission.table5_data
+        elif hasattr(submission, 'table6_data'):
+            template = 'adopters_features/table_6_details.html'
+            form_data = submission.table6_data
+        elif hasattr(submission, 'table7a_data'):
+            template = 'adopters_features/table_7a_details.html'
+            form_data = submission.table7a_data
+        elif hasattr(submission, 'table7b_data'):
+            template = 'adopters_features/table_7b_details.html'
+            form_data = submission.table7b_data
+        else:
+            # Handle cases where Submission exists but has no related data
+            messages.error(request, "This submission has no associated data.")
+            return redirect('admin_dashboard')
 
-    template = 'media_features/generic_details.html'
-    # Determine which template to render based on the form_name
-    if 'Table 10' in submission.form_name:
-        template = 'media_features/table_10_details.html'
-    elif 'Table 11' in submission.form_name:
-        template = 'media_features/table_11_details.html'
-    elif 'Table 9' in submission.form_name:
-        template = 'media_features/table_9_details.html'
-    elif 'Table 8' in submission.form_name:
-        template = 'media_features/table_8_details.html'
-    elif 'Ordinance Form' in submission.form_name:
-        template = 'media_features/table_12_details.html'
-    elif 'Impact Assessment Form' in submission.form_name:
-        template = 'media_features/table_13_details.html'
-    elif 'Awards Form' in submission.form_name:
-        template = 'media_features/table_14_details.html'
-    elif 'Other Activities Form' in submission.form_name:
-        template = 'media_features/table_15_details.html'
+    except Submission.DoesNotExist:
+        # If no Submission object is found, try to get a FormSubmission object (for old tables)
+        submission = get_object_or_404(FormSubmission, pk=submission_id)
+        template = 'media_features/generic_details.html'
+        form_data = submission.form_data
 
-    
+        # Determine which template to render based on the form_name from the old model
+        if 'Table 10' in submission.form_name:
+            template = 'media_features/table_10_details.html'
+        elif 'Table 11' in submission.form_name:
+            template = 'media_features/table_11_details.html'
+        elif 'Table 9' in submission.form_name:
+            template = 'media_features/table_9_details.html'
+        elif 'Table 8' in submission.form_name:
+            template = 'media_features/table_8_details.html'
+        elif 'Ordinance Form' in submission.form_name:
+            template = 'media_features/table_12_details.html'
+        elif 'Impact Assessment Form' in submission.form_name:
+            template = 'media_features/table_13_details.html'
+        elif 'Awards Form' in submission.form_name:
+            template = 'media_features/table_14_details.html'
+        elif 'Other Activities Form' in submission.form_name:
+            template = 'media_features/table_15_details.html'
+
     context = {
         'submission': submission,
-        'form_data': submission.form_data, # Pass the JSON data directly as it contains the document URLs
+        'form_data': form_data,
     }
 
     return render(request, template, context)

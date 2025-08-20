@@ -199,7 +199,7 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Form Name</th>
+                                    <th>Form Type</th>
                                     <th>Submitted By</th>
                                     <th>Submission Date</th>
                                     <th>Actions</th>
@@ -208,7 +208,19 @@
                             <tbody>
                                 {% for submission in submitted_forms %}
                                     <tr>
-                                        <td>{{ submission.form_name }}</td>
+                                        <td>
+                                            {% if submission.table5_data %}
+                                                Table 5: Adopters
+                                            {% elif submission.table6_data %}
+                                                Table 6: IEC Materials
+                                            {% elif submission.table7a_data %}
+                                                Table 7a: Budget Utilization (GAA)
+                                            {% elif submission.table7b_data %}
+                                                Table 7b: Budget Utilization (Income)
+                                            {% else %}
+                                                Other Form
+                                            {% endif %}
+                                        </td>
                                         <td>{{ submission.submitter.get_full_name }}</td>
                                         <td>{{ submission.submitted_at|date:"M d, Y P" }}</td>
                                         <td>

@@ -68,12 +68,10 @@
             </tbody>
         </table>
         
-        {% if form_data.supporting_documents %}
         <h4 class="mt-8">Supporting Documents:</h4>
+        {% if form_data.supporting_documents %}
         <ul class="file-list">
-            {% for doc in form_data.supporting_documents %}
-                <li><a href="{{ doc.url }}" target="_blank">{{ doc.name }}</a></li>
-            {% endfor %}
+            <li><a href="{{ form_data.supporting_documents.url }}" target="_blank">{{ form_data.supporting_documents.name }}</a></li>
         </ul>
         {% else %}
         <p class="mt-4">No supporting documents uploaded.</p>
