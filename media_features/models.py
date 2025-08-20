@@ -6,10 +6,6 @@ from django.contrib.auth.models import AbstractUser
 from accounts.models import CustomUser 
 from django.db import models
 
-
-
-
-
 class MediaOutlet(models.Model):
     """Represents different media outlets where PPAs can be featured"""
     media_outlet_id = models.AutoField(primary_key=True)
@@ -411,7 +407,7 @@ class Awards(models.Model):
     person_received_award = models.CharField(max_length=255)
     award_title = models.CharField(max_length=500)
     award_donor = models.CharField(max_length=255)
-    LEVEL_CHOICES = [
+    LEVEL_CHOICES = [   
         ('LOCAL', 'Local'),
         ('REGIONAL', 'Regional'),
         ('NATIONAL', 'National'),
@@ -435,11 +431,11 @@ class OtherActivities(models.Model):
     date_conducted = models.DateField()
     activity_title = models.CharField(max_length=500)
     CATEGORY_CHOICES = [
-        ('TRAINING', 'Training'),
-        ('SEMINAR', 'Seminar'),
+        ('MEETING', 'Meeting'),
         ('WORKSHOP', 'Workshop'),
-        ('CONFERENCE', 'Conference'),
-        ('OUTREACH', 'Community Outreach'),
+        ('PLANNING', 'Planning'),
+        ('CAPACITY_BUILDING', 'Capacity Building for Extensionists'),
+        ('COMMUNITY_OUTREACH_ACTIVITY', 'Community Outreach Activity'),
         ('OTHER', 'Other'),
     ]
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
