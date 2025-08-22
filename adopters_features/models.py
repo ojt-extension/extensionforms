@@ -70,6 +70,9 @@ class Table5Adopter(models.Model):
     contact_person = models.CharField(max_length=255, blank=True, null=True)
     contact_number_email = models.CharField(max_length=255, blank=True, null=True)
 
+    # NEW FIELD ADDED: This will store the supporting documents for Table 5.
+    supporting_documents = models.FileField(upload_to='adopter_documents/', null=True, blank=True)
+
     def save(self, *args, **kwargs):
         # Auto-compute income_difference if both values are present
         if self.monthly_income_before is not None and self.monthly_income_after is not None:
@@ -99,13 +102,15 @@ class Table6IEC(models.Model):
     fisherfolk_recipients = models.IntegerField(blank=True, null=True)
     ag_technician_recipients = models.IntegerField(blank=True, null=True)
     gov_employee_recipients = models.IntegerField(blank=True, null=True)
-    private_employee_recipients = models.IntegerField(blank=True, null=True)
-    others_recipients = models.IntegerField(blank=True, null=True)
+    # Renamed field to match the form
+    priv_employee_recipients = models.IntegerField(blank=True, null=True)
+    # Renamed field to match the form
+    other_recipients = models.IntegerField(blank=True, null=True)
     total_recipients = models.IntegerField(blank=True, null=True)
 
     project_no = models.CharField(max_length=50, blank=True, null=True)
     sdg = models.CharField(max_length=255, blank=True, null=True)
-    thematic_area = models.CharField(max_length=255, blank=True, null=True)
+    thematic_area = models.CharField(max_length=255, choices=THEMATIC_CHOICES, blank=True, null=True)
 
     remarks = models.TextField(blank=True, null=True)
     department_unit = models.CharField(max_length=255, blank=True, null=True)
@@ -116,16 +121,16 @@ class Table6IEC(models.Model):
     supporting_documents = models.FileField(upload_to='iec_documents/', null=True, blank=True)
 
     def save(self, *args, **kwargs):
-        # Calculate the total recipients before saving
+        # Calculate the total recipients using the corrected field names
         self.total_recipients = (self.male_recipients or 0) + \
-                                (self.female_recipients or 0) + \
-                                (self.student_recipients or 0) + \
-                                (self.farmer_recipients or 0) + \
-                                (self.fisherfolk_recipients or 0) + \
-                                (self.ag_technician_recipients or 0) + \
-                                (self.gov_employee_recipients or 0) + \
-                                (self.private_employee_recipients or 0) + \
-                                (self.others_recipients or 0)
+                                 (self.female_recipients or 0) + \
+                                 (self.student_recipients or 0) + \
+                                 (self.farmer_recipients or 0) + \
+                                 (self.fisherfolk_recipients or 0) + \
+                                 (self.ag_technician_recipients or 0) + \
+                                 (self.gov_employee_recipients or 0) + \
+                                 (self.priv_employee_recipients or 0) + \
+                                 (self.other_recipients or 0)
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -136,6 +141,7 @@ class Table6IEC(models.Model):
 class Table7aBudgetGAA(models.Model):
     submission = models.OneToOneField(Submission, on_delete=models.CASCADE, related_name='table7a_data')
     
+    no = models.IntegerField(blank=True, null=True)
     total_budget_allocated = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
     department = models.CharField(max_length=255)
     curricular_offering = models.CharField(max_length=255, blank=True, null=True)
@@ -154,6 +160,7 @@ class Table7aBudgetGAA(models.Model):
 class Table7bBudgetIncome(models.Model):
     submission = models.OneToOneField(Submission, on_delete=models.CASCADE, related_name='table7b_data')
     
+    no = models.IntegerField(blank=True, null=True)
     total_budget_allocated = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
     department = models.CharField(max_length=255)
     curricular_offering = models.CharField(max_length=255, blank=True, null=True)

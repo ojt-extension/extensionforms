@@ -34,6 +34,18 @@
             </thead>
             <tbody>
                 <tr>
+                    <td>No</td>
+                    <td>{{ form_data.no }}</td>
+                </tr>
+                <tr>
+                    <td>Code</td>
+                    <td>{{ form_data.code }}</td>
+                </tr>
+                <tr>
+                    <td>Related Curricular Offering</td>
+                    <td>{{ form_data.related_curricular_offering }}</td>
+                </tr>
+                <tr>
                     <td>Title</td>
                     <td>{{ form_data.title }}</td>
                 </tr>
@@ -50,22 +62,79 @@
                     <td>{{ form_data.female_recipients }}</td>
                 </tr>
                 <tr>
+                    <td>Student Recipients</td>
+                    <td>{{ form_data.student_recipients }}</td>
+                </tr>
+                <tr>
+                    <td>Farmer Recipients</td>
+                    <td>{{ form_data.farmer_recipients }}</td>
+                </tr>
+                <tr>
+                    <td>Fisherfolk Recipients</td>
+                    <td>{{ form_data.fisherfolk_recipients }}</td>
+                </tr>
+                <tr>
+                    <td>Agricultural Technician Recipients</td>
+                    <td>{{ form_data.ag_technician_recipients }}</td>
+                </tr>
+                <tr>
+                    <td>Government Employee Recipients</td>
+                    <td>{{ form_data.gov_employee_recipients }}</td>
+                </tr>
+                <!-- Corrected field names to match the model -->
+                <tr>
+                    <td>Private Employee Recipients</td>
+                    <td>{{ form_data.priv_employee_recipients }}</td>
+                </tr>
+                <tr>
+                    <td>Others Recipients</td>
+                    <td>{{ form_data.other_recipients }}</td>
+                </tr>
+                <!-- End of corrected fields -->
+                <tr>
                     <td>Total Recipients</td>
                     <td>{{ form_data.total_recipients }}</td>
                 </tr>
+                <tr>
+                    <td>Project Number</td>
+                    <td>{{ form_data.project_no }}</td>
+                </tr>
+                <tr>
+                    <td>SDG</td>
+                    <td>{{ form_data.sdg }}</td>
+                </tr>
+                <tr>
+                    <td>Thematic Area</td>
+                    <td>{{ form_data.thematic_area }}</td>
+                </tr>
+                <tr>
+                    <td>Remarks</td>
+                    <td>{{ form_data.remarks }}</td>
+                </tr>
+                <tr>
+                    <td>Department/Unit</td>
+                    <td>{{ form_data.department_unit }}</td>
+                </tr>
+                <tr>
+                    <td>Contact Person</td>
+                    <td>{{ form_data.contact_person }}</td>
+                </tr>
+                <tr>
+                    <td>Contact Number/Email</td>
+                    <td>{{ form_data.contact_number_email }}</td>
+                </tr>
+                <tr>
+                    <td>Supporting Documents</td>
+                    <td>
+                        {% if form_data.supporting_documents %}
+                            <a href="{{ form_data.supporting_documents.url }}" target="_blank">View Document</a>
+                        {% else %}
+                            No supporting documents uploaded.
+                        {% endif %}
+                    </td>
+                </tr>
             </tbody>
         </table>
-        
-        {% if form_data.supporting_documents %}
-        <h4 class="mt-8">Supporting Documents:</h4>
-        <ul class="file-list">
-            {% for doc in form_data.supporting_documents %}
-                <li><a href="{{ doc.url }}" target="_blank">{{ doc.name }}</a></li>
-            {% endfor %}
-        </ul>
-        {% else %}
-        <p class="mt-4">No supporting documents uploaded.</p>
-        {% endif %}
     </div>
 </body>
 </html>

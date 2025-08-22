@@ -412,7 +412,7 @@ def get_curricular_offerings(request, department_id):
     """
     Returns a JSON response of curricular offerings for a given department.
     """
-    offerings = CurricularOffering.objects.filter(department_id=department_id).values('curricular_offering_name', 'offering_name')
+    offerings = CurricularOffering.objects.filter(department_id=department_id).values('offering_name', 'offering_name')
     return JsonResponse(list(offerings), safe=False)
 
 # NEW: This is the main, centralized export function

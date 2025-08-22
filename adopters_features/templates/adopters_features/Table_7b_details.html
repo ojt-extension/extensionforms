@@ -53,19 +53,18 @@
                     <td>Remarks</td>
                     <td>{{ form_data.remarks|default:"—" }}</td>
                 </tr>
+                <tr>
+                    <td>Supporting Documents</td>
+                    <td>
+                        {% if form_data.supporting_documents %}
+                            <a href="{{ form_data.supporting_documents.url }}" target="_blank">View Document</a>
+                        {% else %}
+                            No supporting documents uploaded.
+                        {% endif %}
+                    </td>
+                </tr>
             </tbody>
         </table>
-        
-        {% if form_data.supporting_documents %}
-        <h4 class="mt-8">Supporting Documents:</h4>
-        <ul class="file-list">
-            {% for doc in form_data.supporting_documents %}
-                <li><a href="{{ doc.url }}" target="_blank">{{ doc.name }}</a></li>
-            {% endfor %}
-        </ul>
-        {% else %}
-        <p class="mt-4">No supporting documents uploaded.</p>
-        {% endif %}
     </div>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Submission Details - Adopters</title>
+    <title>Submission Details - Adopter</title>
     <link rel="stylesheet" href="{% static 'media_features/style.css' %}">
 </head>
 <body>
@@ -38,44 +38,93 @@
                     <td>{{ form_data.no }}</td>
                 </tr>
                 <tr>
-                    <td>Name</td>
+                    <td>Code</td>
+                    <td>{{ form_data.code }}</td>
+                </tr>
+                <tr>
+                    <td>Related Curricular Offering</td>
+                    <td>{{ form_data.related_curricular_offering }}</td>
+                </tr>
+                <tr>
+                    <td>Adopter Name</td>
                     <td>{{ form_data.adopter_name }}</td>
                 </tr>
                 <tr>
-                    <td>Address</td>
+                    <td>Adopter Address</td>
                     <td>{{ form_data.adopter_address }}</td>
                 </tr>
                 <tr>
-                    <td>Contact</td>
+                    <td>Adopter Contact</td>
                     <td>{{ form_data.adopter_contact }}</td>
                 </tr>
                 <tr>
-                    <td>Sex</td>
+                    <td>Adopter Sex</td>
                     <td>{{ form_data.adopter_sex }}</td>
                 </tr>
                 <tr>
-                    <td>Category</td>
+                    <td>Adopter Category</td>
                     <td>{{ form_data.adopter_category }}</td>
                 </tr>
                 <tr>
-                    <td>Income Before</td>
+                    <td>Projects Involved</td>
+                    <td>{{ form_data.projects_involved }}</td>
+                </tr>
+                <tr>
+                    <td>Trainings Attended</td>
+                    <td>{{ form_data.trainings_attended }}</td>
+                </tr>
+                <tr>
+                    <td>Other Assistance Received</td>
+                    <td>{{ form_data.other_assistance_received }}</td>
+                </tr>
+                <tr>
+                    <td>Date Started</td>
+                    <td>{{ form_data.date_started }}</td>
+                </tr>
+                <tr>
+                    <td>Technologies Adopted</td>
+                    <td>{{ form_data.technologies_adopted }}</td>
+                </tr>
+                <tr>
+                    <td>Monthly Income Before</td>
                     <td>{{ form_data.monthly_income_before }}</td>
                 </tr>
                 <tr>
-                    <td>Income After</td>
+                    <td>Monthly Income After</td>
                     <td>{{ form_data.monthly_income_after }}</td>
+                </tr>
+                <tr>
+                    <td>Other Significant Changes</td>
+                    <td>{{ form_data.other_significant_changes }}</td>
+                </tr>
+                <tr>
+                    <td>Remarks</td>
+                    <td>{{ form_data.remarks }}</td>
+                </tr>
+                <tr>
+                    <td>Department/Unit</td>
+                    <td>{{ form_data.department_unit }}</td>
+                </tr>
+                <tr>
+                    <td>Contact Person</td>
+                    <td>{{ form_data.contact_person }}</td>
+                </tr>
+                <tr>
+                    <td>Contact Number/Email</td>
+                    <td>{{ form_data.contact_number_email }}</td>
+                </tr>
+                <tr>
+                    <td>Supporting Documents</td>
+                    <td>
+                        {% if form_data.supporting_documents %}
+                            <a href="{{ form_data.supporting_documents.url }}" target="_blank">View Document</a>
+                        {% else %}
+                            No document
+                        {% endif %}
+                    </td>
                 </tr>
             </tbody>
         </table>
-        
-        <h4 class="mt-8">Supporting Documents:</h4>
-        {% if form_data.supporting_documents %}
-        <ul class="file-list">
-            <li><a href="{{ form_data.supporting_documents.url }}" target="_blank">{{ form_data.supporting_documents.name }}</a></li>
-        </ul>
-        {% else %}
-        <p class="mt-4">No supporting documents uploaded.</p>
-        {% endif %}
     </div>
 </body>
 </html>

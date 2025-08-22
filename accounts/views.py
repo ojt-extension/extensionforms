@@ -1,5 +1,3 @@
-# accounts/views.py
-
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
@@ -103,9 +101,6 @@ def export_all_submissions(request):
     """
     Exports data from all specified models to a single Excel file,
     with each model on a separate worksheet.
-    
-    NOTE: You will need to add your new models (Table5Adopter, etc.)
-    to the 'tables' dictionary to include them in the export.
     """
     if not request.user.is_superuser:
         return redirect('coordinator_dashboard')
@@ -135,6 +130,12 @@ def export_all_submissions(request):
         docs = SupportingDocument.objects.filter(**{related_name: self})
         return ", ".join([f"{base_url}{doc.file.url}" for doc in docs])
 
+    def get_file_url(self):
+        # A new utility function to handle single FileFields
+        if self.supporting_documents:
+            return f"{base_url}{self.supporting_documents.url}"
+        return ""
+
     def get_curricular_offerings(self):
         return ", ".join([offering.offering_name for offering in self.curricular_offerings.all()])
 
@@ -144,9 +145,38 @@ def export_all_submissions(request):
     Technology.add_to_class('supporting_documents_list', get_supporting_documents)
     Technology.add_to_class('curricular_offerings_list', get_curricular_offerings)
     StudentExtensionInvolvement.add_to_class('supporting_documents_list', get_supporting_documents)
+    # Add the new helper method to your new models
+    Table5Adopter.add_to_class('supporting_documents_url', get_file_url)
+    Table6IEC.add_to_class('supporting_documents_url', get_file_url)
+    Table7aBudgetGAA.add_to_class('supporting_documents_url', get_file_url)
+    Table7bBudgetIncome.add_to_class('supporting_documents_url', get_file_url)
 
     # Dictionary defining the tables to export and their configurations
     tables = {
+        'Table 5 - Adopters': {
+            'model': Table5Adopter,
+            'fields': ['no', 'code', 'related_curricular_offering', 'adopter_name', 'adopter_address', 'adopter_contact', 'adopter_sex', 'adopter_category', 'projects_involved', 'trainings_attended', 'other_assistance_received', 'date_started', 'technologies_adopted', 'monthly_income_before', 'monthly_income_after', 'income_difference', 'other_significant_changes', 'remarks', 'department_unit', 'contact_person', 'contact_number_email', 'supporting_documents_url'],
+            'headers': ['No.', 'Code', 'Related Curricular Offering', 'Adopter Name', 'Adopter Address', 'Adopter Contact', 'Adopter Sex', 'Adopter Category', 'Projects Involved', 'Trainings Attended', 'Other Assistance Received', 'Date Started', 'Technologies Adopted', 'Monthly Income Before', 'Monthly Income After', 'Income Difference', 'Other Significant Changes', 'Remarks', 'Department/Unit', 'Contact Person', 'Contact Number/Email', 'Supporting Documents'],
+            'notes': ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '1. Photos\n2. Documentation']
+        },
+        'Table 6 - IEC': {
+            'model': Table6IEC,
+            'fields': ['no', 'code', 'related_curricular_offering', 'title', 'format', 'male_recipients', 'female_recipients', 'student_recipients', 'farmer_recipients', 'fisherfolk_recipients', 'ag_technician_recipients', 'gov_employee_recipients', 'private_employee_recipients', 'others_recipients', 'total_recipients', 'project_no', 'sdg', 'thematic_area', 'remarks', 'department_unit', 'contact_person', 'contact_number_email', 'supporting_documents_url'],
+            'headers': ['No.', 'Code', 'Related Curricular Offering', 'Title', 'Format', 'Male Recipients', 'Female Recipients', 'Student Recipients', 'Farmer Recipients', 'Fisherfolk Recipients', 'Agricultural Technician Recipients', 'Government Employee Recipients', 'Private Employee Recipients', 'Others Recipients', 'Total Recipients', 'Project Number', 'SDG', 'Thematic Area', 'Remarks', 'Department/Unit', 'Contact Person', 'Contact Number/Email', 'Supporting Documents'],
+            'notes': ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '1. Documentation (Photos, Video) \n2. Copy of IEC Materials']
+        },
+        'Table 7a - Budget GAA': {
+            'model': Table7aBudgetGAA,
+            'fields': ['department', 'curricular_offering', 'allocated_budget', 'amount_utilized', 'remarks', 'supporting_documents_url'],
+            'headers': ['Department', 'Curricular Offering', 'Allocated Budget', 'Amount Utilized', 'Remarks', 'Supporting Documents'],
+            'notes': ['', '', '', '', '', '1. Disbursement Vouchers\n2. Receipts']
+        },
+        'Table 7b - Budget Income': {
+            'model': Table7bBudgetIncome,
+            'fields': ['department', 'curricular_offering', 'allocated_budget', 'amount_utilized', 'remarks', 'supporting_documents_url'],
+            'headers': ['Department', 'Curricular Offering', 'Allocated Budget', 'Amount Utilized', 'Remarks', 'Supporting Documents'],
+            'notes': ['', '', '', '', '', '1. Disbursement Vouchers\n2. Receipts']
+        },
         'Table 8 - Faculty Involvement': {
             'model': FacultyInvolvement,
             'fields': ['faculty_staff_name', 'academic_rank_position', 'employment_status', 'avg_hours_per_week', 'total_hours_per_quarter', 'remarks', 'supporting_documents_list'],
@@ -210,6 +240,9 @@ def export_all_submissions(request):
             queryset = queryset.select_related('department', 'curricular_offering').prefetch_related('supporting_documents')
         elif model == FacultyInvolvement:
             queryset = queryset.prefetch_related('supporting_documents')
+        elif model in [Table5Adopter, Table6IEC, Table7aBudgetGAA, Table7bBudgetIncome]:
+             # No prefetch is needed for single FileField
+            pass
         
         # Write data rows
         start_row = 3
@@ -217,7 +250,11 @@ def export_all_submissions(request):
             row_data = []
             for field in fields:
                 try:
-                    if field in ['curricular_offerings_list', 'supporting_documents_list']:
+                    if field == 'supporting_documents_list':
+                        value = getattr(record, field)()
+                    elif field == 'curricular_offerings_list':
+                        value = getattr(record, field)()
+                    elif field == 'supporting_documents_url':
                         value = getattr(record, field)()
                     else:
                         parts = field.split('__')
@@ -250,16 +287,16 @@ def view_submission_details(request, submission_id):
         
         # Check which related table has data and set the context
         if hasattr(submission, 'table5_data'):
-            template = 'adopters_features/table_5_details.html' # Assuming you've moved/copied this template
+            template = 'adopters_features/Table_5_details.html' # Assuming you've moved/copied this template
             form_data = submission.table5_data
         elif hasattr(submission, 'table6_data'):
-            template = 'adopters_features/table_6_details.html'
+            template = 'adopters_features/Table_6_details.html'
             form_data = submission.table6_data
         elif hasattr(submission, 'table7a_data'):
-            template = 'adopters_features/table_7a_details.html'
+            template = 'adopters_features/Table_7a_details.html'
             form_data = submission.table7a_data
         elif hasattr(submission, 'table7b_data'):
-            template = 'adopters_features/table_7b_details.html'
+            template = 'adopters_features/Table_7b_details.html'
             form_data = submission.table7b_data
         else:
             # Handle cases where Submission exists but has no related data

@@ -12,15 +12,12 @@
             <a href="{% url 'reports_dashboard' %}" class="btn btn-secondary">← Go to Dashboard</a>
         </div>
 
-        <!-- Add Form -->
         <div class="card mb-4">
             <div class="card-header">Add New Entry</div>
             <div class="card-body">
-                <!-- IMPORTANT: Change form method to POST and add enctype for file uploads -->
                 <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
                     
-                    <!-- Manually render each field to avoid duplication -->
                     <div class="mb-3">
                         <label for="{{ form.department.id_for_label }}" class="form-label">Department:</label>
                         {{ form.department }}
@@ -42,11 +39,10 @@
                         {{ form.remarks }}
                     </div>
                     
-                    <!-- Supporting Documents Field -->
                     <div class="mb-3">
                         <label for="id_supporting_documents" class="form-label">Supporting Documents:</label>
-                        {{ form.supporting_documents }}
-                        <small class="form-text text-muted">Select multiple files (e.g., PDF, images) if needed.</small>
+                        <input type="file" class="form-control" name="supporting_documents" id="id_supporting_documents">
+                        <small class="form-text text-muted">Select a single file (e.g., PDF, images).</small>
                     </div>
 
                     <button type="submit" class="btn btn-success">Save</button>
@@ -54,27 +50,36 @@
             </div>
         </div>
 
-        <!-- Data Table -->
         <div class="table-responsive">
             <table class="table table-bordered table-striped">
                 <thead class="table-dark">
                     <tr>
-                        <th>ID</th>
                         <th>Department</th>
                         <th>Curricular Offering</th>
                         <th>Allocated Budget</th>
                         <th>Amount Utilized</th>
+                        <th>Remarks</th>
+                        <th>Supporting Documents</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for row in rows %}
                     <tr>
-                        <td>{{ row.id }}</td>
                         <td>{{ row.department }}</td>
                         <td>{{ row.curricular_offering }}</td>
                         <td>{{ row.allocated_budget }}</td>
                         <td>{{ row.amount_utilized }}</td>
+                        <!-- Display Remarks -->
+                        <td>{{ row.remarks|default_if_none:"N/A" }}</td>
+                        <!-- Display Supporting Documents as a link -->
+                        <td>
+                            {% if row.supporting_documents %}
+                                <a href="{{ row.supporting_documents.url }}" target="_blank">View Document</a>
+                            {% else %}
+                                No Document
+                            {% endif %}
+                        </td>
                         <td>
                             <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editModal{{ row.id }}">Edit</button>
                             <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ row.id }}">Delete</button>
@@ -85,7 +90,6 @@
                     <div class="modal fade" id="editModal{{ row.id }}" tabindex="-1">
                         <div class="modal-dialog modal-lg">
                             <div class="modal-content">
-                                <!-- IMPORTANT: Add enctype for file uploads -->
                                 <form method="POST" action="{% url 'table7b_edit' row.id %}" enctype="multipart/form-data">
                                     {% csrf_token %}
                                     <div class="modal-header">
@@ -93,7 +97,6 @@
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
                                     <div class="modal-body">
-                                        <!-- Manually render edit fields for control -->
                                         <div class="mb-3">
                                             <label for="edit_department_{{ row.id }}" class="form-label">Department:</label>
                                             <input type="text" name="department" value="{{ row.department }}" class="form-control" id="edit_department_{{ row.id }}">
@@ -115,11 +118,10 @@
                                             <input type="text" name="remarks" value="{{ row.remarks }}" class="form-control" id="edit_remarks_{{ row.id }}">
                                         </div>
                                         
-                                        <!-- Supporting Documents field for editing -->
                                         <div class="mb-3">
                                             <label for="edit_files_{{ row.id }}" class="form-label">Upload New Documents:</label>
-                                            <input type="file" class="form-control" name="supporting_documents" id="edit_files_{{ row.id }}" multiple>
-                                            <small class="form-text text-muted">Existing documents will be retained. Upload new ones to add them.</small>
+                                            <input type="file" class="form-control" name="supporting_documents" id="edit_files_{{ row.id }}">
+                                            <small class="form-text text-muted">Select a single file. Existing document will be replaced.</small>
                                         </div>
                                     </div>
                                     <div class="modal-footer">
@@ -152,7 +154,6 @@
                             </div>
                         </div>
                     </div>
-
                     {% endfor %}
                 </tbody>
             </table>
