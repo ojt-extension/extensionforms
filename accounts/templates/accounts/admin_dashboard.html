@@ -189,6 +189,29 @@
         </div>
 
         <div class="dashboard-content">
+            <!-- Partnership Data Section -->
+            <div class="card">
+                <h2>Partnership Forms Summary</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                    <div style="background: #e6f3ff; padding: 15px; border-radius: 5px; text-align: center;">
+                        <h3 style="margin: 0; color: #1a365d;">{{ partnerships.count }}</h3>
+                        <p style="margin: 5px 0 0 0; color: #2d3748;">Partnerships</p>
+                    </div>
+                    <div style="background: #e6ffe6; padding: 15px; border-radius: 5px; text-align: center;">
+                        <h3 style="margin: 0; color: #1a5d1a;">{{ internal_projects.count }}</h3>
+                        <p style="margin: 5px 0 0 0; color: #2d3748;">Internal Projects</p>
+                    </div>
+                    <div style="background: #fff2e6; padding: 15px; border-radius: 5px; text-align: center;">
+                        <h3 style="margin: 0; color: #5d3a1a;">{{ external_projects.count }}</h3>
+                        <p style="margin: 5px 0 0 0; color: #2d3748;">External Projects</p>
+                    </div>
+                    <div style="background: #f0e6ff; padding: 15px; border-radius: 5px; text-align: center;">
+                        <h3 style="margin: 0; color: #3d1a5d;">{{ advisory_services.count }}</h3>
+                        <p style="margin: 5px 0 0 0; color: #2d3748;">Advisory Services</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="card">
                 <h2>Submitted Forms</h2>
                 

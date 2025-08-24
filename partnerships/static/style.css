@@ -1,0 +1,543 @@
+/*
+ * style.css
+ * Unified styles for the extension reports application forms
+ */
+
+/* Basic Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body Styles */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f7fafc;
+    color: #000000;
+    line-height: 1.6;
+    padding: 0;
+    margin: 0;
+}
+
+/* Navigation Bar */
+.navbar {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.nav-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.nav-links {
+    display: flex;
+    gap: 2rem;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: #4a5568;
+    font-weight: 500;
+    padding: 0.5rem 0;
+    transition: color 0.2s;
+    border-bottom: 2px solid transparent;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: #000000;
+    border-bottom-color: #000000;
+}
+
+/* Main Content */
+.main-content {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Form Header */
+.form-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.form-header h2 {
+    font-size: 2rem;
+    font-weight: 300;
+    color: #2d3748;
+    letter-spacing: -0.5px;
+}
+
+/* Main Form */
+.main-form {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Form Sections */
+.form-section {
+    background-color: #f8f8f8;
+    border: 1px solid #e0e0e0;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border-radius: 8px;
+}
+
+.form-section:last-child {
+    margin-bottom: 0;
+}
+
+.form-section h3 {
+    color: #2d3748;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+}
+
+/* Form Grid Layout */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Form Groups */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1.5rem;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+/* Labels */
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: #4a5568;
+}
+
+/* Input Styling */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select,
+textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d0d0d0;
+    background-color: #ffffff;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: border-color 0.2s;
+    border-radius: 4px;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: #666666;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Sub-field Groups */
+.sub-field-group {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+}
+
+.sub-field-group h4 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #2d3748;
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+
+.sub-field-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+/* Button Styling */
+.btn, .btn-primary, .btn-secondary, .btn-export {
+    background-color: #000000;
+    color: #ffffff;
+    border: none;
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    margin: 0.25rem;
+}
+
+.btn:hover, .btn-primary:hover {
+    background-color: #333333;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+}
+
+.btn-secondary:hover {
+    background-color: #545b62;
+}
+
+.btn-export {
+    background-color: #28a745;
+}
+
+.btn-export:hover {
+    background-color: #218838;
+}
+
+/* Form Actions */
+.form-actions {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* Dashboard Cards */
+.card {
+    background-color: #f8f8f8;
+    border: 1px solid #e0e0e0;
+    padding: 2rem;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.card h3 {
+    color: #2d3748;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.card p {
+    font-size: 2rem;
+    font-weight: 300;
+    color: #4a5568;
+    margin: 0;
+}
+
+/* Records Section */
+.records-section {
+    margin-top: 3rem;
+    padding: 2rem;
+    background-color: #f8f8f8;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+}
+
+.records-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.records-header h3 {
+    color: #2d3748;
+    font-weight: 500;
+    margin: 0;
+}
+
+.records-search {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.search-input-table {
+    padding: 0.5rem;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+/* Table Styling */
+.records-table-container {
+    overflow-x: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+.records-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #ffffff;
+    margin: 0;
+}
+
+.records-table th {
+    background-color: #f0f0f0;
+    text-align: left;
+    padding: 1rem;
+    font-weight: 600;
+    border-bottom: 2px solid #000000;
+    border-right: 1px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+.records-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    border-right: 1px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+.records-table tr:hover {
+    background-color: #f8f8f8;
+}
+
+.no-records {
+    text-align: center;
+    padding: 2rem;
+    color: #666666;
+    font-style: italic;
+}
+
+/* Messages Styling */
+.messages {
+    margin-bottom: 1.5rem;
+}
+
+.message {
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid;
+    border-radius: 4px;
+}
+
+.message.success {
+    background-color: #f0f8f0;
+    border-color: #4caf50;
+    color: #2e7d32;
+}
+
+.message.error {
+    background-color: #fff5f5;
+    border-color: #f44336;
+    color: #c62828;
+}
+
+/* File Upload Styles - Keep existing functionality */
+input[type="file"] {
+    width: 100%;
+    padding: 1rem;
+    border: 3px dashed #007bff;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
+    font-size: 0.95rem;
+    color: #495057;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+input[type="file"]:hover {
+    border-color: #0056b3;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+}
+
+.file-preview, .image-preview {
+    margin-top: 1rem;
+    min-height: 80px;
+    max-height: 300px;
+    overflow-y: auto;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+.file-item, .image-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    margin: 0.75rem 0;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.file-item {
+    background: linear-gradient(135deg, #fff3e0 0%, #ffffff 50%);
+    border: 2px solid #ffcc80;
+}
+
+.image-item {
+    background: linear-gradient(135deg, #e8f5e8 0%, #ffffff 50%);
+    border: 2px solid #a5d6a7;
+}
+
+.file-icon {
+    font-size: 24px;
+    margin-right: 1rem;
+    min-width: 32px;
+    text-align: center;
+}
+
+.file-name {
+    flex: 1;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-right: 1rem;
+    word-break: break-word;
+}
+
+.file-size {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-right: 1rem;
+    white-space: nowrap;
+    background: #e9ecef;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+}
+
+.remove-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.remove-btn:hover {
+    background: #c82333;
+    transform: scale(1.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    body {
+        padding: 0;
+    }
+    
+    .navbar {
+        padding: 1rem;
+    }
+    
+    .nav-links {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .main-content {
+        margin: 1rem;
+        padding: 1rem;
+    }
+    
+    .form-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .form-section {
+        padding: 1rem;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .records-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .records-search {
+        justify-content: center;
+    }
+    
+    .records-table th,
+    .records-table td {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .form-header h2 {
+        font-size: 1.25rem;
+    }
+    
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+        padding: 0.6rem;
+        font-size: 0.9rem;
+    }
+    
+    .btn, .btn-primary, .btn-secondary, .btn-export {
+        padding: 0.6rem 1.5rem;
+        font-size: 0.9rem;
+    }
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #3182ce;
+    text-decoration: none;
+    font-weight: 500;
+    margin-bottom: 20px;
+}
+
+.back-link:hover {
+    color: #2c5aa0;
+    text-decoration: underline;
+}
+
+.back-link svg {
+    flex-shrink: 0;
+}

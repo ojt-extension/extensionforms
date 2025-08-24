@@ -1,0 +1,670 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>External Projects Form</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+
+<body>
+    <main class="main-content">
+       <a href="{% url 'reports_dashboard' %}" style="text-decoration: none; color: #000;">
+            <p style="margin-bottom: 20px;">&larr; Back to Dashboard</p>
+        </a>
+        <hr>
+    
+        <div class="form-header">
+            <h2>External Projects Form</h2>
+        </div>
+
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form class="main-form" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.lunitid.as_hidden }}
+            {{ form.collabgenid.as_hidden }}
+            {{ form.ifpoprogid.as_hidden }}
+            {{ form.projid.as_hidden }}
+            {{ form.awardrcvdid.as_hidden }}
+            {{ form.partship.as_hidden }}
+            
+            <!-- Partnership Selector for Auto-Population -->
+            <div class="form-section">
+                <div class="form-group">
+                    <label for="partnership_selector">Auto-Populate from Partnership (Optional)</label>
+                    <select id="partnership_selector" name="partnership_selector">
+                        <option value="">-- Select a Partnership to Auto-Fill --</option>
+                        {% for partnership in available_partnerships %}
+                            <option value="{{ partnership.partship_id }}" {% if partnership.partship_id|stringformat:"s" == partnership_id %}selected{% endif %}>
+                                Partnership {{ partnership.partship_id }} - {{ partnership.partagency.nameagen|default:"No Agency" }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="projno">Project Number</label>
+                        <input type="text" id="projno" name="projno" placeholder="Enter project number" value="{{ form.projno.value|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="code">Code</label>
+                        <input type="number" id="code" name="code" placeholder="Enter Code (c/o Extension Service)">
+                    </div>
+                    <div class="form-group">
+                        <label for="categid">Category </label>
+                        <input type="text" id="categid" name="categid" placeholder="Enter Category (new, Ongoing, Completed, Terminated or Proposal)" maxlength="15">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <!-- Lead Unit Sub-fields -->
+                <div class="sub-field-group">
+                    <h4>Lead Unit Information</h4>
+                    <div class="sub-field-row">
+                        <div class="form-group">
+                            <label for="lunit_department">Department</label>
+                            <input type="text" id="lunit_department" name="lunit_department" placeholder="Enter Department/Unit">
+                        </div>
+                        <div class="form-group">
+                            <label for="lunit_contper">Contact Person</label>
+                            <input type="text" id="lunit_contper" name="lunit_contper" placeholder="Enter Contact Person">
+                        </div>
+                        <div class="form-group">
+                            <label for="lunit_continf">Contact Information</label>
+                            <input type="text" id="lunit_continf" name="lunit_continf" placeholder="Enter Contact Information">
+                        </div>
+                    </div>
+                </div>
+            </div>    
+           
+            <div class="form-section">
+                <div class="form-group">
+                    <label for="curricoffid">Curriculum Offering</label>
+                    <input type="text" id="curricoffid" name="curricoffid" placeholder="Enter Curriculum Offering" maxlength="50">
+                </div>
+            </div>
+
+                 <!-- Collaborating Agency Sub-fields -->
+            <div class="form-section">
+                <div class="sub-field-group">
+                    <h4>Collaborating Agency </h4>
+                    <div class="sub-field-row">
+                        <div class="form-group">
+                            <label for="collab_name">Agency Name</label>
+                            <input type="text" id="collab_name" name="collab_name" placeholder="Enter Collaborating Agency Name">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <!-- External Program Information Sub-fields -->
+                <div class="sub-field-group">
+                    <h4>If Part of Program</h4>
+                    <div class="sub-field-row">
+                        <div class="form-group">
+                            <label for="extprog_title">Program Title</label>
+                            <textarea id="extprog_title" name="extprog_title" placeholder="Enter program title" rows="2"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="extprog_proglead">Program Leader</label>
+                            <input type="text" id="extprog_proglead" name="extprog_proglead" placeholder="Enter Program Leader">
+                        </div>
+                        <div class="form-group">
+                            <label for="extprog_abfundagency">Approved Budget from Funding Agency</label>
+                            <input type="number" id="extprog_abfundagency" name="extprog_abfundagency" placeholder="Enter Approved Budget">
+                        </div>
+                        <div class="form-group">
+                            <label for="extprog_cpfundcvsu">Counterpart Fund from CVSU</label>
+                            <input type="number" id="extprog_cpfundcvsu" name="extprog_cpfundcvsu" placeholder="Enter CVSU counterpart fund">
+                        </div>
+                        <div class="form-group">
+                            <label for="extprog_tbudget">Total Budget (Auto-calculated)</label>
+                            <input type="number" id="extprog_tbudget" name="extprog_tbudget" placeholder="Auto-calculated" readonly style="background-color: #f5f5f5;">
+                        </div>
+                        <div class="form-group">
+                            <label for="extprog_incldates">Inclusive Dates</label>
+                            <textarea id="extprog_incldates" name="extprog_incldates" placeholder="Enter inclusive dates" rows="2"></textarea>
+                        </div>
+                        <!-- NEW: MOA Number field for External Program -->
+                        <div class="form-group">
+                            <label for="extprog_moano_id">MOA Number (Program)</label>
+                            <input type="number" id="extprog_moano_id" name="extprog_moano_id" placeholder="Enter MOA number for program">
+                        </div>
+                    </div>
+                </div>
+
+                    <!-- External Project Information Sub-fields -->
+                    <div class="sub-field-group">
+                        <h4>Project</h4>
+                        <div class="sub-field-row">
+                            <div class="form-group">
+                                <label for="extproj_title">Title</label>
+                                <textarea id="extproj_title" name="extproj_title" placeholder="Enter project title" rows="2"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="extproj_tmembers">Team Members</label>
+                                <textarea id="extproj_tmembers" name="extproj_tmembers" placeholder="Enter Team Members/Roles" rows="2"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="extproj_abfundagency">Approved Budget from Funding Agency</label>
+                                <input type="number" id="extproj_abfundagency" name="extproj_abfundagency" placeholder="Enter Approved Budget">
+                            </div>
+                            <div class="form-group">
+                                <label for="extproj_cpfundcvsu">Counterpart Fund from CVSU</label>
+                                <input type="number" id="extproj_cpfundcvsu" name="extproj_cpfundcvsu" placeholder="Enter CVSU counterpart fund">
+                            </div>
+                            <div class="form-group">
+                                <label for="extproj_tbudget">Total Budget (Auto-calculated)</label>
+                                <input type="number" id="extproj_tbudget" name="extproj_tbudget" placeholder="Auto-calculated" readonly style="background-color: #f5f5f5;">
+                            </div>
+                            <div class="form-group">
+                                <label for="extproj_incldates">Inclusive Dates</label>
+                                <textarea id="extproj_incldates" name="extproj_incldates" placeholder="Enter inclusive dates" rows="2"></textarea>
+                            </div>
+                            <!-- NEW: MOA Number field for External Project -->
+                            <div class="form-group">
+                                <label for="extproj_moano_id">MOA Number (Project)</label>
+                                <input type="number" id="extproj_moano_id" name="extproj_moano_id" placeholder="Enter MOA number for project">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="fundagency">Funding Agency</label>
+                        <input type="text" id="fundagency" name="fundagency" placeholder="Enter funding agency" maxlength="150">
+                    </div>
+                    <div class="form-group">
+                        <label for="dtappfagency">Date Approved by the Funding Agency</label>
+                        <input type="date" id="dtappfagency" name="dtappfagency">
+                    </div>
+                    <div class="form-group">
+                        <label for="dtinmeet">Date of Inception Meeting</label>
+                        <input type="date" id="dtinmeet" name="dtinmeet">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-group full-width">
+                    <label for="benef">Beneficiaries</label>
+                    <textarea id="benef" name="benef" placeholder="Classification and Number of beneficiaries (e.g. 45 youth)" rows="3"></textarea>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="sdgnum">SDG Number</label>
+                        <input type="text" id="sdgnum" name="sdgnum" placeholder="Enter SDG number" maxlength="70">
+                    </div>
+                    <div class="form-group">
+                        <label for="themarea">Thematic Area</label>
+                        <input type="text" id="themarea" name="themarea" placeholder="Enter thematic area" maxlength="20">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <!-- External Award Received Sub-fields -->
+                <div class="sub-field-group">
+                    <h4>Award Received Information (External)</h4>
+                    <div class="sub-field-row">
+                        <div class="form-group">
+                            <label for="extaward_toaward">Award Title</label>
+                            <textarea id="extaward_toaward" name="extaward_toaward" placeholder="Enter award title" rows="2"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="extaward_conferagency">Conferring Agency</label>
+                            <textarea id="extaward_conferagency" name="extaward_conferagency" placeholder="Enter conferring agency" rows="2"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="extaward_date">Date </label>
+                            <textarea id="extaward_date" name="extaward_date" placeholder="Enter Date Received" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-group full-width">
+                    <label for="remarks">Remarks</label>
+                    <textarea id="remarks" name="remarks" placeholder="Enter remarks" rows="3"></textarea>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>File Uploads</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="files">Files (Max 10)</label>
+                        <input type="file" id="files" name="files" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.7z" onchange="handleFileSelect(this, 'file-preview')">
+                        <div id="file-preview" class="file-preview"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="images">Images (Max 10)</label>
+                        <input type="file" id="images" name="images" multiple accept=".jpg,.jpeg,.png,.gif,.bmp,.webp,.svg" onchange="handleFileSelect(this, 'image-preview')">
+                        <div id="image-preview" class="image-preview"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- External Projects Records Section -->
+            <div class="records-section">
+                <div class="records-header">
+                    <h3>External Project Records</h3>
+                    <div class="records-search">
+                        <input type="text" id="external-search" placeholder="Search external projects..." class="search-input-table">
+                        <button type="button" class="btn-secondary" onclick="searchExternalRecords()">Search</button>
+                    </div>
+                </div>
+                <div class="records-table-container">
+                    <table class="records-table" id="records-table">
+                        <thead>
+                            <tr>
+                                <th>Project Number</th>
+                                <th>Code</th>
+                                <th>Category</th>
+                                <th>Department</th>
+                                <th>Contact Person</th>
+                                <th>Contact Information</th>
+                                <th>Curriculum Offering</th>
+                                <th>Agency Name</th>
+                                <th>Program Title (Program)</th>
+                                <th>Program Leader  (Program)</th>
+                                <th>Approved Budget (Program)</th>
+                                <th>Counterpart Fund (Program)</th>
+                                <th>Total Budget (Program)</th>
+                                <th>Inclusive Dates (Program)</th>
+                                <th>MOA Number (Program)</th>
+                                <th>Project Title (Project)</th>
+                                <th>Team Members (Project)</th>
+                                <th>Approved Budget (Project)</th>
+                                <th>Counterpart Fund (Project)</th>
+                                <th>Total Budget (Project)</th>
+                                <th>Inclusive Dates (Project)</th>
+                                <th>MOA Number (Project)</th>
+                                <th>Funding Agency</th>
+                                <th>Date Approved by Funding Agency</th>
+                                <th>Date of Inception Meeting</th>
+                                <th>Beneficiaries</th>
+                                <th>SDG Number</th>
+                                <th>Thematic Area</th>
+                                <th>Award Title</th>
+                                <th>Conferring Agency</th>
+                                <th>Award Date</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody id="external-records">
+                            {% for project in external_projects %}
+                            <tr>
+                                <td>{{ project.projno.project_no|default:'-' }}</td>
+                                <td>{{ project.code|default:'-' }}</td>
+                                <td>{{ project.categid|default:'-' }}</td>
+                                <td>{{ project.lunitid.department|default:'-' }}</td>
+                                <td>{{ project.lunitid.contper|default:'-' }}</td>
+                                <td>{{ project.lunitid.continf|default:'-' }}</td>
+                                <td>{{ project.curricoffid|default:'-' }}</td>
+                                <td>{{ project.collabgenid.nameagen|default:'-' }}</td>
+                                <td>{{ project.ifpoprogid.title|default:'-' }}</td>
+                                <td>{{ project.ifpoprogid.proglead|default:'-' }}</td>
+                                <td>{{ project.ifpoprogid.abfundagency|default:'-' }}</td>
+                                <td>{{ project.ifpoprogid.cpfundcvsu|default:'-' }}</td>
+                                <td>{{ project.ifpoprogid.tbudget|default:'-' }}</td>
+                                <td>{{ project.ifpoprogid.incldates|default:'-' }}</td>
+                                <td>{{ project.ifpoprogid.moano_id|default:'-' }}</td>
+                                <td>{{ project.projid.title|default:'-' }}</td>
+                                <td>{{ project.projid.tmembers|default:'-' }}</td>
+                                <td>{{ project.projid.abfundagency|default:'-' }}</td>
+                                <td>{{ project.projid.cpfundcvsu|default:'-' }}</td>
+                                <td>{{ project.projid.tbudget|default:'-' }}</td>
+                                <td>{{ project.projid.incldates|default:'-' }}</td>
+                                <td>{{ project.projid.moano_id|default:'-' }}</td>
+                                <td>{{ project.fundagency|default:'-' }}</td>
+                                <td>{{ project.dtappfagency|date:"M d, Y"|default:'-' }}</td>
+                                <td>{{ project.dtinmeet|date:"M d, Y"|default:'-' }}</td>
+                                <td>{{ project.benef|default:'-' }}</td>
+                                <td>{{ project.sdgnum|default:'-' }}</td>
+                                <td>{{ project.themarea|default:'-' }}</td>
+                                <td>{{ project.awardrcvdid.toaward|default:'-' }}</td>
+                                <td>{{ project.awardrcvdid.conferagency|default:'-' }}</td>
+                                <td>{{ project.awardrcvdid.date|default:'-' }}</td>
+                                <td>{{ project.remarks|default:'-' }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="32" class="no-records">No external project records found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'export_external_projects' %}" class="btn-export">Export CSV</a>
+                <button type="submit" class="btn-primary">Save External Project</button>
+                <button type="reset" class="btn-secondary">Reset Form</button>
+                <a href="{% url 'dashboard' %}" class="btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </main>
+
+
+
+
+    
+
+    <script>
+        // File handling functions
+        let accumulatedFiles = {};
+        let accumulatedImages = {};
+        
+        function handleFileSelect(input, previewId) {
+            const preview = document.getElementById(previewId);
+            const newFiles = Array.from(input.files);
+            const isImage = previewId.includes('image');
+            const maxFiles = 10;
+            
+            // Get existing accumulated files
+            let existingFiles = isImage ? (accumulatedImages[previewId] || []) : (accumulatedFiles[previewId] || []);
+            
+            // Combine existing and new files
+            const allFiles = [...existingFiles, ...newFiles];
+            
+            if (allFiles.length > maxFiles) {
+                alert(`Maximum ${maxFiles} files allowed. You have ${existingFiles.length} files already.`);
+                input.value = '';
+                return;
+            }
+            
+            // Store accumulated files
+            if (isImage) {
+                accumulatedImages[previewId] = allFiles;
+            } else {
+                accumulatedFiles[previewId] = allFiles;
+            }
+            
+            // Update the input files
+            const dt = new DataTransfer();
+            allFiles.forEach(file => dt.items.add(file));
+            input.files = dt.files;
+            
+            // Clear and rebuild preview
+            preview.innerHTML = '';
+            
+            allFiles.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = isImage ? 'image-item' : 'file-item';
+                
+                // Add file type icon
+                const fileIcon = document.createElement('span');
+                fileIcon.className = 'file-icon';
+                if (isImage) {
+                    fileIcon.innerHTML = '🖼️';
+                    fileIcon.style.color = '#4CAF50';
+                } else {
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    if (['pdf'].includes(ext)) {
+                        fileIcon.innerHTML = '📄';
+                        fileIcon.style.color = '#f44336';
+                    } else if (['doc', 'docx'].includes(ext)) {
+                        fileIcon.innerHTML = '📄';
+                        fileIcon.style.color = '#2196F3';
+                    } else if (['xls', 'xlsx'].includes(ext)) {
+                        fileIcon.innerHTML = '📈';
+                        fileIcon.style.color = '#4CAF50';
+                    } else {
+                        fileIcon.innerHTML = '📁';
+                        fileIcon.style.color = '#FF9800';
+                    }
+                }
+                
+                const fileName = document.createElement('span');
+                fileName.className = 'file-name';
+                fileName.textContent = file.name;
+                
+                const fileSize = document.createElement('span');
+                fileSize.className = 'file-size';
+                fileSize.textContent = `(${(file.size / 1024).toFixed(1)} KB)`;
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.innerHTML = '×';
+                removeBtn.className = 'remove-btn';
+                removeBtn.type = 'button';
+                removeBtn.onclick = function() {
+                    removeFile(input, index, previewId);
+                };
+                
+                fileItem.appendChild(fileIcon);
+                fileItem.appendChild(fileName);
+                fileItem.appendChild(fileSize);
+                fileItem.appendChild(removeBtn);
+                preview.appendChild(fileItem);
+            });
+        }
+        
+        function removeFile(input, index, previewId) {
+            const isImage = previewId.includes('image');
+            
+            // Remove from accumulated storage
+            if (isImage) {
+                accumulatedImages[previewId] = accumulatedImages[previewId].filter((_, i) => i !== index);
+            } else {
+                accumulatedFiles[previewId] = accumulatedFiles[previewId].filter((_, i) => i !== index);
+            }
+            
+            // Update input files
+            const dt = new DataTransfer();
+            const remainingFiles = isImage ? accumulatedImages[previewId] : accumulatedFiles[previewId];
+            remainingFiles.forEach(file => dt.items.add(file));
+            input.files = dt.files;
+            
+            // Rebuild preview
+            const preview = document.getElementById(previewId);
+            preview.innerHTML = '';
+            
+            remainingFiles.forEach((file, i) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = isImage ? 'image-item' : 'file-item';
+                
+                // Add file type icon
+                const fileIcon = document.createElement('span');
+                fileIcon.className = 'file-icon';
+                if (isImage) {
+                    fileIcon.innerHTML = '🖼️';
+                    fileIcon.style.color = '#4CAF50';
+                } else {
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    if (['pdf'].includes(ext)) {
+                        fileIcon.innerHTML = '📄';
+                        fileIcon.style.color = '#f44336';
+                    } else if (['doc', 'docx'].includes(ext)) {
+                        fileIcon.innerHTML = '📄';
+                        fileIcon.style.color = '#2196F3';
+                    } else if (['xls', 'xlsx'].includes(ext)) {
+                        fileIcon.innerHTML = '📈';
+                        fileIcon.style.color = '#4CAF50';
+                    } else {
+                        fileIcon.innerHTML = '📁';
+                        fileIcon.style.color = '#FF9800';
+                    }
+                }
+                
+                const fileName = document.createElement('span');
+                fileName.className = 'file-name';
+                fileName.textContent = file.name;
+                
+                const fileSize = document.createElement('span');
+                fileSize.className = 'file-size';
+                fileSize.textContent = `(${(file.size / 1024).toFixed(1)} KB)`;
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.innerHTML = '×';
+                removeBtn.className = 'remove-btn';
+                removeBtn.type = 'button';
+                removeBtn.onclick = function() {
+                    removeFile(input, i, previewId);
+                };
+                
+                fileItem.appendChild(fileIcon);
+                fileItem.appendChild(fileName);
+                fileItem.appendChild(fileSize);
+                fileItem.appendChild(removeBtn);
+                preview.appendChild(fileItem);
+            });
+        }
+
+        // Search functionality for external project records
+        function searchExternalRecords() {
+            const searchTerm = document.getElementById('external-search').value.toLowerCase();
+            const rows = document.querySelectorAll('#external-records tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        }
+
+        // Search on Enter key
+        document.getElementById('external-search').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchExternalRecords();
+            }
+        });
+
+
+
+        // Real-time search
+        document.getElementById('external-search').addEventListener('input', searchExternalRecords);
+        
+        // Budget calculation functions for external projects
+        function calculateExternalProgramTotal() {
+            const approved = parseFloat(document.getElementById('extprog_abfundagency').value) || 0;
+            const counterpart = parseFloat(document.getElementById('extprog_cpfundcvsu').value) || 0;
+            const total = approved + counterpart;
+            document.getElementById('extprog_tbudget').value = total > 0 ? total : '';
+        }
+        
+        function calculateExternalProjectTotal() {
+            const approved = parseFloat(document.getElementById('extproj_abfundagency').value) || 0;
+            const counterpart = parseFloat(document.getElementById('extproj_cpfundcvsu').value) || 0;
+            const total = approved + counterpart;
+            document.getElementById('extproj_tbudget').value = total > 0 ? total : '';
+        }
+        
+        // Add event listeners for budget calculations
+        document.getElementById('extprog_abfundagency').addEventListener('input', calculateExternalProgramTotal);
+        document.getElementById('extprog_cpfundcvsu').addEventListener('input', calculateExternalProgramTotal);
+        document.getElementById('extproj_abfundagency').addEventListener('input', calculateExternalProjectTotal);
+        document.getElementById('extproj_cpfundcvsu').addEventListener('input', calculateExternalProjectTotal);
+
+    </script>
+
+    <style>
+
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const partnershipSelect = document.getElementById('partnership_selector');
+
+            if (partnershipSelect) {
+                partnershipSelect.addEventListener('change', function() {
+                    const partnershipId = this.value;
+
+                    if (partnershipId) {
+                        const url = `/partnerships/api/partnership/${partnershipId}/`;
+
+                        fetch(url)
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error('Network response was not ok');
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                console.log('Auto-populating external form with data:', data);
+
+                                // Populate base fields (all forms)
+                                if (data.code) {
+                                    document.getElementById('code').value = data.code;
+                                }
+                                if (data.curricoff) {
+                                    document.getElementById('curricoffid').value = data.curricoff;
+                                }
+                                if (data.sdgnum) {
+                                    document.getElementById('sdgnum').value = data.sdgnum;
+                                }
+                                if (data.themarea) {
+                                    document.getElementById('themarea').value = data.themarea;
+                                }
+                                if (data.remarks) {
+                                    document.getElementById('remarks').value = data.remarks;
+                                }
+                                
+                                // Populate lead unit fields
+                                if (data.lunit_department) {
+                                    document.getElementById('lunit_department').value = data.lunit_department;
+                                }
+                                if (data.lunit_contper) {
+                                    document.getElementById('lunit_contper').value = data.lunit_contper;
+                                }
+                                if (data.lunit_continf) {
+                                    document.getElementById('lunit_continf').value = data.lunit_continf;
+                                }
+                                
+                                // Populate collaborating agency fields (Internal/External only)
+                                if (data.collab_name) {
+                                    document.getElementById('collab_name').value = data.collab_name;
+                                }
+                                
+                                // Show success message
+                                alert('Form auto-populated with partnership data!');
+                            })
+                            .catch(error => {
+                                console.error('Error auto-populating external form:', error);
+                                alert('Error loading partnership data. Please try again.');
+                            });
+                    } else {
+                        // Clear form if no partnership selected
+                        clearExternalForm();
+                    }
+                });
+            }
+        });
+        
+        function clearExternalForm() {
+            // Clear all auto-populated fields
+            const fieldIds = [
+                'code', 'curricoffid', 'sdgnum', 'themarea', 'remarks',
+                'lunit_department', 'lunit_contper', 'lunit_continf',
+                'collab_name'
+            ];
+            
+            fieldIds.forEach(id => {
+                const field = document.getElementById(id);
+                if (field) field.value = '';
+            });
+        }
+    </script>
+</body>
+</html>

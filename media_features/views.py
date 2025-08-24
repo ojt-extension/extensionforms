@@ -10,6 +10,7 @@ from openpyxl.styles import Font, Alignment
 from openpyxl.utils import get_column_letter
 
 from .forms import ExtensionPPAFeaturedForm, TechnologyForm, StudentExtensionInvolvementForm, FacultyInvolvementForm
+from partnerships.models import Partnership, InterFep, ExterFep, AdvServices
 from .models import ExtensionPPAFeatured, ExtensionPPA, MediaOutlet, SupportingDocument, StudentExtensionInvolvement
 from .models import Technology, Department, CurricularOffering, FormSubmission, FacultyInvolvement
 import json # Import json to handle the form_data JSONField
@@ -20,6 +21,11 @@ def reports_dashboard(request):
     Renders the main dashboard page with links to all forms.
     """
     forms = [
+        #added partnership, internal project, external project, and advisory service forms
+        {'name': 'Table 1: Partnerships', 'url_name': 'partnership_form'},
+        {'name': 'Table 2: Internal Projects', 'url_name': 'internal_project_form'},
+        {'name': 'Table 3: External Projects', 'url_name': 'external_project_form'},
+        {'name': 'Table 4: Advisory Services', 'url_name': 'advisory_services_form'},
         {'name': 'Table 8: Faculty Involvement in ESCE', 'url_name': 'table_8_form'},
         {'name': 'Table 9: Student Involvement in ESCE', 'url_name': 'table_9_form'},
         {'name': 'Table 10: ES Activities Featured Forms', 'url_name': 'table_10_form'},

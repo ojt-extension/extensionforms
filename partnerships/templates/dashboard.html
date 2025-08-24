@@ -1,0 +1,53 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-links">
+                <a href="{% url 'dashboard' %}" class="nav-link active">Dashboard</a>
+                <a href="{% url 'partnership_form' %}" class="nav-link">Partnerships</a>
+                <a href="{% url 'internal_project_form' %}" class="nav-link">Internally Funded Projects</a>
+                <a href="{% url 'external_project_form' %}" class="nav-link">Externally Funded Projects</a>
+                <a href="{% url 'advisory_services_form' %}" class="nav-link">Advisory Services</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <header class="form-header">
+            <h2>Extension Reports Dashboard</h2>
+        </header>
+
+        <section class="form-section">
+            <div class="form-grid">
+                <div class="card">
+                    <h3>Partnerships</h3>
+                    <p>{{ partnership_count }}</p>
+                </div>
+                <div class="card">
+                    <h3>Internal Projects</h3>
+                    <p>{{ internal_projects_count }}</p>
+                </div>
+                <div class="card">
+                    <h3>External Projects</h3>
+                    <p>{{ external_projects_count }}</p>
+                </div>
+                <div class="card">
+                    <h3>Advisory Services</h3>
+                    <p>{{ advisory_services_count }}</p>
+                </div>
+            </div>
+        </section>
+        
+       
+    </div>
+
+</body>
+</html>

@@ -8,6 +8,7 @@ from django.http import HttpResponse
 
 from .forms import OJTCoordinatorCreationForm, OJTCoordinatorLoginForm
 from media_features.models import FormSubmission, ExtensionPPAFeatured, Technology, StudentExtensionInvolvement, FacultyInvolvement, SupportingDocument
+from partnerships.models import Partnership, InterFep, ExterFep, AdvServices
 from openpyxl.utils import get_column_letter
 import openpyxl
 from openpyxl.styles import Font, Alignment
@@ -59,32 +60,20 @@ def coordinator_logout(request):
     return redirect('coordinator_auth')
 
 @login_required
-def admin_dashboard(request):
-    """
-    The custom dashboard for the superuser.
-    Shows a list of all submitted forms.
-    """
-    if not request.user.is_superuser:
-        return redirect('coordinator_dashboard')
-        
-    submitted_forms = FormSubmission.objects.all().select_related('submitter')
-    
-    context = {
-        'submitted_forms': submitted_forms,
-    }
-    return render(request, 'accounts/admin_dashboard.html', context)
-
-@login_required
 def coordinator_dashboard(request):
     """
     The main dashboard for OJT coordinators.
     This view now passes a list of forms to the template.
     """
     forms = [
-
+        {'name': 'Table 1: Partnerships', 'url_name': 'partnership_form'},
+        {'name': 'Table 2: Internal Projects', 'url_name': 'internal_project_form'},
+        {'name': 'Table 3: External Projects', 'url_name': 'external_project_form'},
+        {'name': 'Table 4: Advisory Services', 'url_name': 'advisory_services_form'},
+        {'name': 'Table 8: Faculty Involvement', 'url_name': 'table_8_form'},
+        {'name': 'Table 9: Student Involvement', 'url_name': 'table_9_form'},
         {'name': 'Table 10: Media Features', 'url_name': 'table_10_form'},
         {'name': 'Table 11: Technologies Commercialized', 'url_name': 'table_11_form'},
-        # Add other forms here as needed
     ]
     
     context = {
@@ -102,9 +91,17 @@ def admin_dashboard(request):
         return redirect('coordinator_dashboard')
         
     submitted_forms = FormSubmission.objects.all().select_related('submitter')
-    
+    partnerships = Partnership.objects.all()
+    internal_projects = InterFep.objects.all()
+    external_projects = ExterFep.objects.all()
+    advisory_services = AdvServices.objects.all()
+
     context = {
         'submitted_forms': submitted_forms,
+        'partnerships': partnerships,
+        'internal_projects': internal_projects,
+        'external_projects': external_projects,
+        'advisory_services': advisory_services,
     }
     return render(request, 'accounts/admin_dashboard.html', context)
 
@@ -154,6 +151,32 @@ def export_all_submissions(request):
 
     # Dictionary defining the tables to export and their configurations
     tables = {
+        #added partnership, internal project, external project, and advisory service tables
+        'Table 1 - Partnerships': {
+            'model': Partnership,
+            'fields': ['partship_id', 'moano', 'code', 'leadunit__department', 'partagency__nameagen', 'natpart', 'sdgnum', 'themarea'],
+            'headers': ['Partnership ID', 'MOA Number', 'Code', 'Lead Unit', 'Partner Agency', 'Nature', 'SDG Number', 'Thematic Area'],
+            'notes': ['', '', '', '', '', '', '', '']
+        },
+        'Table 2 - Internal Projects': {
+            'model': InterFep,
+            'fields': ['interfepid', 'partship__partship_id', 'code', 'lunitid__department', 'collabagenid__nameagen', 'benef', 'sdgnum'],
+            'headers': ['Project ID', 'Partnership ID', 'Code', 'Lead Unit', 'Collaborating Agency', 'Beneficiaries', 'SDG Number'],
+            'notes': ['', '', '', '', '', '', '']
+        },
+        'Table 3 - External Projects': {
+            'model': ExterFep,
+            'fields': ['exterfep_id', 'partship__partship_id', 'code', 'lunitid__department', 'collabgenid__nameagen', 'fundagency', 'benef'],
+            'headers': ['Project ID', 'Partnership ID', 'Code', 'Lead Unit', 'Collaborating Agency', 'Funding Agency', 'Beneficiaries'],
+            'notes': ['', '', '', '', '', '', '']
+        },
+        'Table 4 - Advisory Services': {
+            'model': AdvServices,
+            'fields': ['advservices_id', 'partship__partship_id', 'code', 'lunitid__department', 'adservprov', 'venue', 'totaladservreq'],
+            'headers': ['Service ID', 'Partnership ID', 'Code', 'Lead Unit', 'Services Provided', 'Venue', 'Total Requests'],
+            'notes': ['', '', '', '', '', '', '']
+        },
+
         'Table 8 - Faculty Involvement': {
             'model': FacultyInvolvement,
             'fields': ['faculty_staff_name', 'academic_rank_position', 'employment_status', 'avg_hours_per_week', 'total_hours_per_quarter', 'remarks', 'supporting_documents_list'],
@@ -217,6 +240,16 @@ def export_all_submissions(request):
             queryset = queryset.select_related('department', 'curricular_offering').prefetch_related('supporting_documents')
         elif model == FacultyInvolvement:
             queryset = queryset.prefetch_related('supporting_documents')
+        #added partnership, internal project, external project, and advisory service query optimizations
+        elif model == Partnership:
+            queryset = queryset.select_related('leadunit', 'partagency')
+        elif model == InterFep:
+            queryset = queryset.select_related('lunitid', 'collabagenid', 'partship')
+        elif model == ExterFep:
+            queryset = queryset.select_related('lunitid', 'collabgenid', 'partship')
+        elif model == AdvServices:
+            queryset = queryset.select_related('lunitid', 'collabagenciesid', 'partship')
+
         
         # Write data rows
         start_row = 3
@@ -252,7 +285,16 @@ def view_submission_details(request, submission_id):
     submission = get_object_or_404(FormSubmission, pk=submission_id)
 
     # Determine which template to render based on the form_name
-    if 'Table 10' in submission.form_name:
+    # Add these conditions before the existing if statements:
+    if   'Table 1' in submission.form_name:
+        template = 'partnerships/partnership_details.html'
+    elif 'Table 2' in submission.form_name:
+        template = 'partnerships/internal_project_details.html'
+    elif 'Table 3' in submission.form_name:
+        template = 'partnerships/external_project_details.html'
+    elif 'Table 4' in submission.form_name:
+        template = 'partnerships/advisory_service_details.html'
+    elif 'Table 10' in submission.form_name:
         template = 'media_features/table_10_details.html'
     elif 'Table 11' in submission.form_name:
         template = 'media_features/table_11_details.html'

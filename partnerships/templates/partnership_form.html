@@ -1,0 +1,477 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Partnership Form</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+
+<body>
+    <main class="main-content">
+         <a href="{% url 'reports_dashboard' %}" style="text-decoration: none; color: #000;">
+            <p style="margin-bottom: 20px;">&larr; Back to Dashboard</p>
+        </a>
+        <hr>
+        <div class="form-header">
+            <h2>Partnership Form</h2>
+        </div>
+
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Partnership Form -->
+        <form class="main-form" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.leadunit.as_hidden }}
+            {{ form.partagency.as_hidden }}
+
+            <div class="form-section">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="moano">MOA Number</label>
+                        {{ form.moano }}
+                    </div>
+                    <div class="form-group">
+                        <label for="code">Code</label>
+                        {{ form.code }}
+                    </div>
+                    <div class="form-group">
+                        <label for="categ">Category</label>
+                        {{ form.categ }}
+                    </div>
+                    <div class="form-group">
+                        <label for="datenotar">Date of Notarization</label>
+                        {{ form.datenotar }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                
+                <!-- Lead Unit Sub-fields -->
+                <div class="sub-field-group">
+                    <h4>Lead Unit Information</h4>
+                    <div class="sub-field-row">
+                        <div class="form-group">
+                            <label for="leadunit_department">Department</label>
+                            <input type="text" id="leadunit_department" name="leadunit_department" placeholder="Enter department name">
+                        </div>
+                        <div class="form-group">
+                            <label for="leadunit_contper">Contact Person</label>
+                            <input type="text" id="leadunit_contper" name="leadunit_contper" placeholder="Enter contact person">
+                        </div>
+                        <div class="form-group">
+                            <label for="leadunit_continf">Contact Information</label>
+                            <input type="text" id="leadunit_continf" name="leadunit_continf" placeholder="Enter contact information">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <div class="form-group">
+                    <label for="curricoff">Curriculum Offering</label>
+                    {{ form.curricoff }}
+                </div>
+            </div>
+
+            <div class="form-section">
+                <!-- Partner Agency Sub-fields -->
+                <div class="sub-field-group">
+                    <h4>Partner Agency Information</h4>
+                    <div class="sub-field-row">
+                        <div class="form-group">
+                            <label for="numpart">Number of Partner Agencies</label>
+                            {{ form.numpart }}
+                        </div>
+                        <div class="form-group">
+                            <label for="partagency_name">Agency Name</label>
+                            <input type="text" id="partagency_name" name="partagency_name" placeholder="Enter Name of Agency">
+                        </div>
+                        <div class="form-group">
+                            <label for="partagency_head">Agency Head</label>
+                            <input type="text" id="partagency_head" name="partagency_head" placeholder="Enter Head of Agency">
+                        </div>
+                        <div class="form-group">
+                            <label for="partagency_contact">Contact Details</label>
+                            <input type="text" id="partagency_contact" name="partagency_contact" placeholder="Enter Email or Contact Number">
+                        </div>
+                    </div>
+                </div> 
+            </div>
+
+            <div class="form-section">
+                 <div class="form-grid">
+                    <div class="form-group">
+                        <label for="level">Level</label>
+                        {{ form.level }}
+                    </div>
+                    <div class="form-group">
+                        <label for="catage">Category of Agency</label>
+                        {{ form.catage }}
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="form-section">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="natpart">Nature of Partnership</label>
+                        {{ form.natpart }}
+                    </div>
+                    <div class="form-group">
+                        <label for="tappext">Title of Approved Extension Program</label>
+                        {{ form.tappext }}
+                    </div>
+                    <div class="form-group">
+                        <label for="tofpart">Type of Partnership</label>
+                        {{ form.tofpart }}
+                    </div>
+                    <div class="form-group">
+                        <label for="dappbor">Date of Application/Board Resolution</label>
+                        {{ form.dappbor }}
+                    </div>
+                    <div class="form-group">
+                        <label for="duration">Duration</label>
+                        {{ form.duration }}
+                    </div>
+                    <div class="form-group">
+                        <label for="incldate">Inclusive Dates</label>
+                        {{ form.incldate }}
+                    </div>
+                    <div class="form-group">
+                        <label for="amntinvlv">Amount Involved</label>
+                        {{ form.amntinvlv }}
+                    </div>
+                    <div class="form-group">
+                        <label for="sdgnum">SDG Number</label>
+                        {{ form.sdgnum }}
+                    </div>
+                    <div class="form-group">
+                        <label for="themarea">Thematic Area</label>
+                        {{ form.themarea }}
+                    </div>
+                    <div class="form-group">
+                        <label for="extacperiod">Extension Activity Period</label>
+                        {{ form.extacperiod }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-group full-width">
+                    <label for="remarks">Remarks</label>
+                    {{ form.remarks }}
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>File Uploads</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="files">Files (Max 10)</label>
+                        <input type="file" id="files" name="files" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.7z" onchange="handleFileSelect(this, 'file-preview')">
+                        <div id="file-preview" class="file-preview"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="images">Images (Max 10)</label>
+                        <input type="file" id="images" name="images" multiple accept=".jpg,.jpeg,.png,.gif,.bmp,.webp,.svg" onchange="handleFileSelect(this, 'image-preview')">
+                        <div id="image-preview" class="image-preview"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Partnership Records Section -->
+            <div class="records-section">
+                <div class="records-header">
+                    <h3>Partnership Records</h3>
+                    <div class="records-search">
+                        <input type="text" id="partnership-search" placeholder="Search partnerships..." class="search-input-table">
+                        <button type="button" class="btn-secondary" onclick="searchPartnershipRecords()">Search</button>
+                    </div>
+                </div>
+                <div class="records-table-container">
+                    <table class="records-table" id="records-table">
+                        <thead>
+                            <tr>
+                                <th>MOA Number</th>
+                                <th>Code</th>
+                                <th>Category</th>
+                                <th>Date of Notarization</th>
+                                <th>Department</th>
+                                <th>Contact Person</th>
+                                <th>Contact Information</th>
+                                <th>Curricular Offering</th>
+                                <th>Number of Partner Agencies</th>
+                                <th>Agency Name</th>
+                                <th>Agency Head</th>
+                                <th>Contact Details</th>
+                                <th>Level</th>
+                                <th>Category of Agency</th>
+                                <th>Nature of Partnership</th>
+                                <th>Title of Approved Extension</th>
+                                <th>Type of Partnership</th>
+                                <th>Date of Application/Board Resolution</th>
+                                <th>Duration</th>
+                                <th>Inclusive Dates</th>
+                                <th>Amount Involved</th>
+                                <th>SDG Number</th>
+                                <th>Thematic Area</th>
+                                <th>Extension Activity Period</th>
+                                <th>Remarks</th>
+                                <th>Date Created</th>
+                            </tr>
+                        </thead>
+                        <tbody id="partnership-records">
+                            {% for partnership in partnerships %}
+                            <tr>
+                                <td>{{ partnership.moano|default:'-' }}</td>
+                                <td>{{ partnership.code|default:'-' }}</td>
+                                <td>{{ partnership.categ|default:'-' }}</td>
+                                <td>{{ partnership.datenotar|date:"M d, Y"|default:'-' }}</td>
+                                <td>{{ partnership.leadunit.department|default:'-' }}</td>
+                                <td>{{ partnership.leadunit.contper|default:'-' }}</td>
+                                <td>{{ partnership.leadunit.continf|default:'-' }}</td>
+                                <td>{{ partnership.curricoff|default:'-' }}</td>
+                                <td>{{ partnership.numpart|default:'-' }}</td>
+                                <td>{{ partnership.partagency.nameagen|default:'-' }}</td>
+                                <td>{{ partnership.partagency.headagen|default:'-' }}</td>
+                                <td>{{ partnership.partagency.contdet|default:'-' }}</td>
+                                <td>{{ partnership.level|default:'-' }}</td>
+                                <td>{{ partnership.catage|default:'-' }}</td>
+                                <td>{% if partnership.natpart == 'Both' %}Internally and Externally{% else %}{{ partnership.natpart|default:'-' }}{% endif %}</td>
+                                <td>{{ partnership.tappext|default:'-' }}</td>
+                                <td>{{ partnership.tofpart|default:'-' }}</td>
+                                <td>{{ partnership.dappbor|date:"M d, Y"|default:'-' }}</td>
+                                <td>{{ partnership.duration|default:'-' }}</td>
+                                <td>{{ partnership.incldate|default:'-' }}</td>
+                                <td>{{ partnership.amntinvlv|default:'-' }}</td>
+                                <td>{{ partnership.sdgnum|default:'-' }}</td>
+                                <td>{{ partnership.themarea|default:'-' }}</td>
+                                <td>{{ partnership.extacperiod|default:'-' }}</td>
+                                <td>{{ partnership.remarks|default:'-' }}</td>
+                                <td>{{ partnership.created_at|date:"M d, Y" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="26" class="no-records">No partnership records found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'export_partnerships' %}" class="btn-export">Export CSV</a>
+                <button type="submit" class="btn-primary">Save Partnership</button>
+                <button type="reset" class="btn-secondary">Reset Form</button>
+                <a href="{% url 'dashboard' %}" class="btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </main>
+
+
+
+
+    
+    <script>
+        // File handling functions
+        let accumulatedFiles = {};
+        let accumulatedImages = {};
+        
+        function handleFileSelect(input, previewId) {
+            const preview = document.getElementById(previewId);
+            const newFiles = Array.from(input.files);
+            const isImage = previewId.includes('image');
+            const maxFiles = 10;
+            
+            // Get existing accumulated files
+            let existingFiles = isImage ? (accumulatedImages[previewId] || []) : (accumulatedFiles[previewId] || []);
+            
+            // Combine existing and new files
+            const allFiles = [...existingFiles, ...newFiles];
+            
+            if (allFiles.length > maxFiles) {
+                alert(`Maximum ${maxFiles} files allowed. You have ${existingFiles.length} files already.`);
+                input.value = '';
+                return;
+            }
+            
+            // Store accumulated files
+            if (isImage) {
+                accumulatedImages[previewId] = allFiles;
+            } else {
+                accumulatedFiles[previewId] = allFiles;
+            }
+            
+            // Update the input files
+            const dt = new DataTransfer();
+            allFiles.forEach(file => dt.items.add(file));
+            input.files = dt.files;
+            
+            // Clear and rebuild preview
+            preview.innerHTML = '';
+            
+            allFiles.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = isImage ? 'image-item' : 'file-item';
+                
+                // Add file type icon
+                const fileIcon = document.createElement('span');
+                fileIcon.className = 'file-icon';
+                if (isImage) {
+                    fileIcon.innerHTML = '🖼️';
+                    fileIcon.style.color = '#4CAF50';
+                } else {
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    if (['pdf'].includes(ext)) {
+                        fileIcon.innerHTML = '📄';
+                        fileIcon.style.color = '#f44336';
+                    } else if (['doc', 'docx'].includes(ext)) {
+                        fileIcon.innerHTML = '📄';
+                        fileIcon.style.color = '#2196F3';
+                    } else if (['xls', 'xlsx'].includes(ext)) {
+                        fileIcon.innerHTML = '📈';
+                        fileIcon.style.color = '#4CAF50';
+                    } else {
+                        fileIcon.innerHTML = '📁';
+                        fileIcon.style.color = '#FF9800';
+                    }
+                }
+                
+                const fileName = document.createElement('span');
+                fileName.className = 'file-name';
+                fileName.textContent = file.name;
+                
+                const fileSize = document.createElement('span');
+                fileSize.className = 'file-size';
+                fileSize.textContent = `(${(file.size / 1024).toFixed(1)} KB)`;
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.innerHTML = '×';
+                removeBtn.className = 'remove-btn';
+                removeBtn.type = 'button';
+                removeBtn.onclick = function() {
+                    removeFile(input, index, previewId);
+                };
+                
+                fileItem.appendChild(fileIcon);
+                fileItem.appendChild(fileName);
+                fileItem.appendChild(fileSize);
+                fileItem.appendChild(removeBtn);
+                preview.appendChild(fileItem);
+            });
+        }
+        
+        function removeFile(input, index, previewId) {
+            const isImage = previewId.includes('image');
+            
+            // Remove from accumulated storage
+            if (isImage) {
+                accumulatedImages[previewId] = accumulatedImages[previewId].filter((_, i) => i !== index);
+            } else {
+                accumulatedFiles[previewId] = accumulatedFiles[previewId].filter((_, i) => i !== index);
+            }
+            
+            // Update input files
+            const dt = new DataTransfer();
+            const remainingFiles = isImage ? accumulatedImages[previewId] : accumulatedFiles[previewId];
+            remainingFiles.forEach(file => dt.items.add(file));
+            input.files = dt.files;
+            
+            // Rebuild preview
+            const preview = document.getElementById(previewId);
+            preview.innerHTML = '';
+            
+            remainingFiles.forEach((file, i) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = isImage ? 'image-item' : 'file-item';
+                
+                // Add file type icon
+                const fileIcon = document.createElement('span');
+                fileIcon.className = 'file-icon';
+                if (isImage) {
+                    fileIcon.innerHTML = '🖼️';
+                    fileIcon.style.color = '#4CAF50';
+                } else {
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    if (['pdf'].includes(ext)) {
+                        fileIcon.innerHTML = '📄';
+                        fileIcon.style.color = '#f44336';
+                    } else if (['doc', 'docx'].includes(ext)) {
+                        fileIcon.innerHTML = '📄';
+                        fileIcon.style.color = '#2196F3';
+                    } else if (['xls', 'xlsx'].includes(ext)) {
+                        fileIcon.innerHTML = '📈';
+                        fileIcon.style.color = '#4CAF50';
+                    } else {
+                        fileIcon.innerHTML = '📁';
+                        fileIcon.style.color = '#FF9800';
+                    }
+                }
+                
+                const fileName = document.createElement('span');
+                fileName.className = 'file-name';
+                fileName.textContent = file.name;
+                
+                const fileSize = document.createElement('span');
+                fileSize.className = 'file-size';
+                fileSize.textContent = `(${(file.size / 1024).toFixed(1)} KB)`;
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.innerHTML = '×';
+                removeBtn.className = 'remove-btn';
+                removeBtn.type = 'button';
+                removeBtn.onclick = function() {
+                    removeFile(input, i, previewId);
+                };
+                
+                fileItem.appendChild(fileIcon);
+                fileItem.appendChild(fileName);
+                fileItem.appendChild(fileSize);
+                fileItem.appendChild(removeBtn);
+                preview.appendChild(fileItem);
+            });
+        }
+
+        // Search functionality for partnership records
+        function searchPartnershipRecords() {
+            const searchTerm = document.getElementById('partnership-search').value.toLowerCase();
+            const rows = document.querySelectorAll('#partnership-records tr');
+            
+            rows.forEach(function(row) {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        }
+
+        // Search on Enter key
+        document.getElementById('partnership-search').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchPartnershipRecords();
+            }
+        });
+
+
+
+        // Real-time search
+        document.getElementById('partnership-search').addEventListener('input', searchPartnershipRecords);
+        
+
+    </script>
+
+    <style>
+
+    </style>
+</body>
+</html>

@@ -28,9 +28,10 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # The new landing page/dashboard will be at the root URL
+    # The main dashboard will be at the root URL
     path('', include('media_features.urls')),
-    path('accounts/', include('accounts.urls')), # <-- Add this line
+    path('partnerships/', include('partnerships.urls')),
+    path('accounts/', include('accounts.urls')),
 ]
 
 # Add this block to serve media files during development
