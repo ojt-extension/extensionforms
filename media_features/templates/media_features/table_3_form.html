@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table 4. Training</title>
+    <link rel="stylesheet" href="{% static 'media_features/style.css' %}">
+    <script src="{% static 'media_features/scripts.js' %}"></script>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'reports_dashboard' %}" style="text-decoration: none; color: #000;">
+            <p style="margin-bottom: 20px;">&larr; Back to Dashboard</p>
+        </a>
+        <h1>Table 4. Training</h1>
+
+        {# Django messages display #}
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-container">
+            <form method="post" enctype="multipart/form-data" id="training-form"> 
+                {% csrf_token %}
+                
+                <!-- Basic Information Section -->
+                <h3>Basic Information</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        {{ form.training_no.label_tag }}
+                        {{ form.training_no }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.extension_code.label_tag }}
+                        {{ form.extension_code }}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        {{ form.lead_department.label_tag }}
+                        {{ form.lead_department }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.contact_person.label_tag }}
+                        {{ form.contact_person }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    {{ form.contact_number_email.label_tag }}
+                    {{ form.contact_number_email }}
+                </div>
+
+                <div class="form-group">
+                    <label>Related Curricular Offerings:</label>
+                    <div id="curricular-offerings-container">
+                        {# Checkboxes will be dynamically inserted here #}
+                    </div>
+                </div>
+
+                <!-- Collaboration Section -->
+                <h3>Collaboration Information</h3>
+                <div class="form-group">
+                    <label>Collaborating Agencies:</label>
+                    <div class="checkbox-container">
+                        {% for agency in form.collaborating_agencies %}
+                            <div class="checkbox-item">
+                                {{ agency.tag }}
+                                <label for="{{ agency.id_for_label }}">{{ agency.choice_label }}</label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        {{ form.new_collaborating_agency.label_tag }}
+                        {{ form.new_collaborating_agency }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.new_agency_contact_person.label_tag }}
+                        {{ form.new_agency_contact_person }}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        {{ form.training_coordinator.label_tag }}
+                        {{ form.training_coordinator }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.project_no.label_tag }}
+                        {{ form.project_no }}
+                    </div>
+                </div>
+
+                <!-- Training Details Section -->
+                <h3>Training Details</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        {{ form.category.label_tag }}
+                        {{ form.category }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.training_duration.label_tag }}
+                        {{ form.training_duration }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    {{ form.title.label_tag }}
+                    {{ form.title }}
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        {{ form.start_date.label_tag }}
+                        {{ form.start_date }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.end_date.label_tag }}
+                        {{ form.end_date }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    {{ form.venue.label_tag }}
+                    {{ form.venue }}
+                </div>
+
+                <!-- Participants by Sex Section -->
+                <h3>Participants by Sex</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        {{ form.male_participants.label_tag }}
+                        {{ form.male_participants }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.female_participants.label_tag }}
+                        {{ form.female_participants }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.prefer_not_to_say_participants.label_tag }}
+                        {{ form.prefer_not_to_say_participants }}
+                    </div>
+                </div>
+
+                <div class="total-display">
+                    <strong>Total Participants by Sex: <span id="total-by-sex">0</span></strong>
+                </div>
+
+                <!-- Participants by Category Section -->
+                <h3>Participants by Category</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        {{ form.student_participants.label_tag }}
+                        {{ form.student_participants }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.farmer_participants.label_tag }}
+                        {{ form.farmer_participants }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.fisherfolk_participants.label_tag }}
+                        {{ form.fisherfolk_participants }}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        {{ form.ag_technician_participants.label_tag }}
+                        {{ form.ag_technician_participants }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.government_employee_participants.label_tag }}
+                        {{ form.government_employee_participants }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.private_employee_participants.label_tag }}
+                        {{ form.private_employee_participants }}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        {{ form.four_ps_participants.label_tag }}
+                        {{ form.four_ps_participants }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.other_participants.label_tag }}
+                        {{ form.other_participants }}
+                    </div>
+                </div>
+
+                <div class="total-display">
+                    <strong>Total Participants by Category: <span id="total-by-category">0</span></strong>
+                </div>
+
+                <!-- TVL Specific Section -->
+                <div id="tvl-specific-section" style="display: none;">
+                    <h3>For TVL Trainings Only</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            {{ form.solo_parent_participants.label_tag }}
+                            {{ form.solo_parent_participants }}
+                        </div>
+                        <div class="form-group">
+                            {{ form.four_ps_members.label_tag }}
+                            {{ form.four_ps_members }}
+                        </div>
+                        <div class="form-group">
+                            {{ form.participants_with_disabilities.label_tag }}
+                            {{ form.participants_with_disabilities }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Survey and Rating Section -->
+                <h3>Survey and Rating Information</h3>
+                <div class="form-group">
+                    {{ form.total_trainees_surveyed.label_tag }}
+                    {{ form.total_trainees_surveyed }}
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        {{ form.relevance_rating.label_tag }}
+                        {{ form.relevance_rating }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.quality_rating.label_tag }}
+                        {{ form.quality_rating }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.timeliness_rating.label_tag }}
+                        {{ form.timeliness_rating }}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        {{ form.total_clients_requesting.label_tag }}
+                        {{ form.total_clients_requesting }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.requests_responded_3_days.label_tag }}
+                        {{ form.requests_responded_3_days }}
+                    </div>
+                </div>
+
+                <!-- Financial Information Section -->
+                <h3>Estimated Expenses and Source of Funds</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        {{ form.amount_charged_cvsu.label_tag }}
+                        {{ form.amount_charged_cvsu }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.amount_charged_partner.label_tag }}
+                        {{ form.amount_charged_partner }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    {{ form.partner_agency_name.label_tag }}
+                    {{ form.partner_agency_name }}
+                </div>
+
+                <!-- Classification Section -->
+                <h3>Classification</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        {{ form.sustainable_development_goal.label_tag }}
+                        {{ form.sustainable_development_goal }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.thematic_area.label_tag }}
+                        {{ form.thematic_area }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    {{ form.remarks.label_tag }}
+                    {{ form.remarks }}
+                </div>
+
+                <div class="form-group">
+                    <label for="files">Supporting Documents:</label>
+                    <p class="form-note">
+                        Upload any supporting documents for this training record.
+                    </p>
+                    <input type="file" name="files" id="files" multiple class="form-input">
+                </div>
+
+                <button type="submit" class="btn">Submit Training Record</button>
+            </form>
+        </div>
+
+        <!-- Export Button -->
+        <div style="margin: 20px 0;">
+            <a href="{% url 'export_training_excel' %}" class="btn btn-secondary">Export to Excel</a>
+        </div>
+
+        <h2>Existing Training Records</h2>
+
+        <div class="table-container">
+            {% if trainings %}
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Training No.</th>
+                            <th>Code (Extension)</th>
+                            <th>Lead Department</th>
+                            <th>Contact Person</th>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Inclusive Dates</th>
+                            <th>Venue</th>
+                            <th>Total Participants</th>
+                            <th>Training Duration</th>
+                            <th>Weighted Days</th>
+                            <th>SDG</th>
+                            <th>Thematic Area</th>
+                            <th>Supporting Documents</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for training in trainings %}
+                        <tr>
+                            <td>{{ training.training_no }}</td>
+                            <td>{{ training.extension_code }}</td>
+                            <td>{{ training.lead_department.department_name }}</td>
+                            <td>{{ training.contact_person }}</td>
+                            <td>{{ training.title }}</td>
+                            <td>{{ training.category }}</td>
+                            <td>{{ training.inclusive_dates }}</td>
+                            <td>{{ training.venue }}</td>
+                            <td>{{ training.total_participants_by_sex }}</td>
+                            <td>{{ training.get_training_duration_display }}</td>
+                            <td>{{ training.weighted_training_days|floatformat:2 }}</td>
+                            <td>{{ training.sustainable_development_goal }}</td>
+                            <td>{{ training.thematic_area }}</td>
+                            <td>
+                                {% for doc in training.supporting_documents.all %}
+                                    <a href="{{ doc.file.url }}" target="_blank">{{ doc.file.name|cut:"supporting_documents/" }}</a>
+                                    {% if not forloop.last %}, {% endif %}
+                                {% empty %}
+                                    —
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="no-data">No training records found.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const departmentSelect = document.getElementById('id_lead_department');
+        const categorySelect = document.getElementById('id_category');
+        const tvlSection = document.getElementById('tvl-specific-section');
+        
+        // Handle department change for curricular offerings
+        if (departmentSelect) {
+            departmentSelect.addEventListener('change', function() {
+                const departmentId = this.value;
+                const container = document.getElementById('curricular-offerings-container');
+                
+                if (departmentId) {
+                    fetch(`/get-curricular-offerings/?department_id=${departmentId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            container.innerHTML = '';
+                            data.offerings.forEach(offering => {
+                                const div = document.createElement('div');
+                                div.className = 'checkbox-item';
+                                div.innerHTML = `
+                                    <input type="checkbox" 
+                                           name="curricular_offerings" 
+                                           value="${offering.id}" 
+                                           id="curricular_${offering.id}">
+                                    <label for="curricular_${offering.id}">${offering.name}</label>
+                                `;
+                                container.appendChild(div);
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Error fetching curricular offerings:', error);
+                            container.innerHTML = '<p>Error loading curricular offerings</p>';
+                        });
+                } else {
+                    container.innerHTML = '';
+                }
+            });
+            
+            // Trigger initial load if department is already selected
+            if (departmentSelect.value) {
+                departmentSelect.dispatchEvent(new Event('change'));
+            }
+        }
+        
+        // Handle category change for TVL-specific fields
+        if (categorySelect && tvlSection) {
+            categorySelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const categoryCode = selectedOption ? selectedOption.text.split(' - ')[0] : '';
+                
+                if (categoryCode === 'TVL') {
+                    tvlSection.style.display = 'block';
+                } else {
+                    tvlSection.style.display = 'none';
+                    // Clear TVL-specific fields when not TVL
+                    document.getElementById('id_solo_parent_participants').value = '0';
+                    document.getElementById('id_four_ps_members').value = '0';
+                    document.getElementById('id_participants_with_disabilities').value = '0';
+                }
+            });
+            
+            // Check initial state
+            categorySelect.dispatchEvent(new Event('change'));
+        }
+        
+        // Calculate totals for participants by sex
+        const sexFields = ['id_male_participants', 'id_female_participants', 'id_prefer_not_to_say_participants'];
+        const totalBySexSpan = document.getElementById('total-by-sex');
+        
+        sexFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.addEventListener('input', calculateTotalBySex);
+            }
+        });
+        
+        function calculateTotalBySex() {
+            let total = 0;
+            sexFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field && field.value) {
+                    total += parseInt(field.value) || 0;
+                }
+            });
+            if (totalBySexSpan) {
+                totalBySexSpan.textContent = total;
+            }
+        }
+        
+        // Calculate totals for participants by category
+        const categoryFields = [
+            'id_student_participants', 'id_farmer_participants', 'id_fisherfolk_participants',
+            'id_ag_technician_participants', 'id_government_employee_participants', 
+            'id_private_employee_participants', 'id_four_ps_participants', 'id_other_participants'
+        ];
+        const totalByCategorySpan = document.getElementById('total-by-category');
+        
+        categoryFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.addEventListener('input', calculateTotalByCategory);
+            }
+        });
+        
+        function calculateTotalByCategory() {
+            let total = 0;
+            categoryFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field && field.value) {
+                    total += parseInt(field.value) || 0;
+                }
+            });
+            if (totalByCategorySpan) {
+                totalByCategorySpan.textContent = total;
+            }
+        }
+        
+        // Initial calculations
+        calculateTotalBySex();
+        calculateTotalByCategory();
+    });
+    </script>
+</body>
+</html>

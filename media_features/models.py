@@ -236,126 +236,9 @@ class FacultyInvolvement(models.Model):
         verbose_name = "Faculty Involvement"
         verbose_name_plural = "Faculty Involvement"
         ordering = ['-submitted_at']
-
+   
     def __str__(self):
         return f"T8: {self.faculty_staff_name}"
-
-class SupportingDocument(models.Model):
-    """
-    Model to store multiple documents for a single ExtensionPPAFeatured or Technology record.
-    """
-        
-    extension_ppa_featured = models.ForeignKey(
-        ExtensionPPAFeatured,
-        on_delete=models.CASCADE,
-        related_name='supporting_documents',
-        null=True, # <-- MODIFIED
-        blank=True # <-- MODIFIED
-    )
-    technology = models.ForeignKey( # <-- NEW FOREIGN KEY
-        Technology,
-        on_delete=models.CASCADE,
-        related_name='supporting_documents',
-        null=True,
-        blank=True
-    )
-    student_involvement = models.ForeignKey(
-        StudentExtensionInvolvement,
-        on_delete=models.CASCADE,
-        related_name='supporting_documents',
-        null=True,
-        blank=True
-    )
-    faculty_involvement = models.ForeignKey(
-        'FacultyInvolvement',
-        on_delete=models.CASCADE,
-        related_name='supporting_documents',
-        null=True,
-        blank=True
-    )
-    ordinance = models.ForeignKey(
-        'Ordinance',
-        on_delete=models.CASCADE,
-        related_name='supporting_documents',
-        null=True,
-        blank=True
-    )
-    impact_assessment = models.ForeignKey(
-        'ImpactAssessment', 
-        on_delete=models.CASCADE,
-        related_name='supporting_documents',
-        null=True,
-        blank=True
-    )
-    award = models.ForeignKey(
-        'Awards',
-        on_delete=models.CASCADE, 
-        related_name='supporting_documents',
-        null=True,
-        blank=True
-    )
-    other_activity = models.ForeignKey(
-        'OtherActivities',
-        on_delete=models.CASCADE,
-        related_name='supporting_documents', 
-        null=True,
-        blank=True
-    )   
-    
-    file = models.FileField(upload_to='supporting_documents/')
-    submitter = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True)
-    def __str__(self):
-        if self.extension_ppa_featured:
-            return f"Document for {self.extension_ppa_featured.extension_ppa.ppa_name}"
-        elif self.technology:
-            return f"Document for {self.technology.technology_title}"
-        elif self.student_involvement:
-            return f"Document for {self.student_involvement.department.department_name} - {self.student_involvement.curricular_offering.offering_name}"
-        elif self.faculty_involvement: 
-            return f"Document for {self.faculty_involvement.faculty_staff_name}"
-        return "Document"
-    
-    def clean(self):
-        # Update validation to include the new field
-        fields_set = sum([
-            bool(self.extension_ppa_featured),
-            bool(self.technology),
-            bool(self.student_involvement),
-            bool(self.faculty_involvement),
-            bool(self.ordinance),
-            bool(self.impact_assessment),
-            bool(self.award),
-            bool(self.other_activity)
-        ])
-        
-        if fields_set > 1:
-            raise ValidationError("A supporting document can only be linked to one type of record.")
-        if fields_set == 0:
-            raise ValidationError("A supporting document must be linked to a record.")
-
-class FormSubmission(models.Model):
-    """
-    Model to store submitted forms from OJT Coordinators.
-    """
-    # Link the submission to the user who submitted it
-    submitter = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='submissions')
-
-    # Store a reference to which form was submitted (e.g., 'Table 10', 'Table 11')
-    form_name = models.CharField(max_length=100)
-
-    # Store the actual form data. A JSONField is flexible for various forms.
-    form_data = models.JSONField()
-
-    # The date and time the form was submitted
-    submitted_at = models.DateTimeField(default=timezone.now)
-
-    form_instance_id = models.IntegerField(null=True, blank=True)
-
-    def __str__(self):
-        return f"{self.form_name} submitted by {self.submitter.get_full_name()} on {self.submitted_at.strftime('%Y-%m-%d')}"
-
-    class Meta:
-        ordering = ['-submitted_at']
 
 class Ordinance(models.Model):
     """Model for Ordinances"""
@@ -451,3 +334,413 @@ class OtherActivities(models.Model):
     class Meta:
         db_table = 'tblOtherActivities'
         ordering = ['-date_conducted']
+
+class CollaboratingAgency(models.Model):
+    """Represents collaborating agencies for training programs"""
+    agency_id = models.AutoField(primary_key=True)
+    agency_name = models.CharField(max_length=255)
+    contact_person = models.CharField(max_length=255, blank=True, null=True)
+    
+    def __str__(self):
+        return self.agency_name
+    
+    class Meta:
+        db_table = 'tblCollaboratingAgency'
+        verbose_name_plural = 'Collaborating Agencies'
+        ordering = ['agency_name']
+
+class TrainingCategory(models.Model):
+    """Lookup table for training categories"""
+    CATEGORY_CHOICES = [
+        ('TVL', 'Technical, Vocational, Livelihood'),
+        ('AE', 'Agricultural and Environmental Trainings'),
+        ('CE', 'Continuing Education for Professionals'),
+        ('BE', 'Basic Education'),
+        ('GAD', 'Gender and Development'),
+        ('O', 'Others'),
+    ]
+    
+    category_id = models.AutoField(primary_key=True)
+    category_code = models.CharField(max_length=10, choices=CATEGORY_CHOICES, unique=True)
+    category_name = models.CharField(max_length=255)
+    
+    def __str__(self):
+        return f"{self.category_code} - {self.category_name}"
+    
+    class Meta:
+        db_table = 'tblTrainingCategory'
+        verbose_name_plural = 'Training Categories'
+
+class SustainableDevelopmentGoal(models.Model):
+    """Lookup table for UN Sustainable Development Goals"""
+    sdg_id = models.AutoField(primary_key=True)
+    sdg_number = models.IntegerField(unique=True)
+    sdg_title = models.CharField(max_length=255)
+    
+    def __str__(self):
+        return f"SDG {self.sdg_number}: {self.sdg_title}"
+    
+    class Meta:
+        db_table = 'tblSustainableDevelopmentGoal'
+        ordering = ['sdg_number']
+
+class ThematicArea(models.Model):
+    """Lookup table for thematic areas"""
+    THEMATIC_CHOICES = [
+        ('A', 'Agri-Fisheries and Food Security'),
+        ('B', 'Biodiversity and Environmental Conservation'),
+        ('C', 'Smart Engineering, ICT and Industrial Competitiveness'),
+        ('D', 'Public Health and Welfare'),
+        ('E', 'Societal Development and Equality'),
+    ]
+    
+    thematic_area_id = models.AutoField(primary_key=True)
+    thematic_code = models.CharField(max_length=10, choices=THEMATIC_CHOICES, unique=True)
+    thematic_name = models.CharField(max_length=255)
+    
+    def __str__(self):
+        return f"{self.thematic_code} - {self.thematic_name}"
+    
+    class Meta:
+        db_table = 'tblThematicArea'
+        verbose_name_plural = 'Thematic Areas'
+
+class Training(models.Model):
+    """Main training record model"""
+    training_id = models.AutoField(primary_key=True)
+    training_no = models.CharField(max_length=50, unique=True, verbose_name="Training No.")
+    extension_code = models.CharField(max_length=50, verbose_name="Code (c/o Extension Services)")
+    
+    # Lead Unit Information
+    lead_department = models.ForeignKey(
+        Department, 
+        on_delete=models.CASCADE, 
+        related_name='led_trainings',
+        verbose_name="Lead Department"
+    )
+    contact_person = models.CharField(max_length=255, verbose_name="Contact Person")
+    contact_number_email = models.CharField(max_length=255, verbose_name="Number/Email")
+    
+    # Curricular Offering - Many-to-many relationship
+    curricular_offerings = models.ManyToManyField(
+        CurricularOffering,
+        blank=True,
+        verbose_name="Curricular Offerings"
+    )
+    
+    # Collaborating Agency Information
+    collaborating_agencies = models.ManyToManyField(
+        CollaboratingAgency,
+        blank=True,
+        verbose_name="Collaborating Agencies"
+    )
+    training_coordinator = models.CharField(max_length=255, verbose_name="Training Coordinator")
+    
+    # Project and Category Information
+    project_no = models.CharField(max_length=50, blank=True, null=True, verbose_name="Project No.")
+    category = models.ForeignKey(
+        TrainingCategory,
+        on_delete=models.CASCADE,
+        verbose_name="Category"
+    )
+    
+    # Training Details
+    title = models.CharField(max_length=500, verbose_name="Title of Training")
+    start_date = models.DateField(verbose_name="Start Date")
+    end_date = models.DateField(verbose_name="End Date")
+    venue = models.CharField(max_length=500, verbose_name="Venue")
+    
+    # Participants by Sex
+    male_participants = models.IntegerField(default=0, verbose_name="Male Participants")
+    female_participants = models.IntegerField(default=0, verbose_name="Female Participants")
+    prefer_not_to_say_participants = models.IntegerField(default=0, verbose_name="Prefer Not To Say")
+    
+    # Participants by Category
+    student_participants = models.IntegerField(default=0, verbose_name="Student Participants")
+    farmer_participants = models.IntegerField(default=0, verbose_name="Farmer Participants")
+    fisherfolk_participants = models.IntegerField(default=0, verbose_name="Fisherfolk Participants")
+    ag_technician_participants = models.IntegerField(default=0, verbose_name="Ag Technician Participants")
+    government_employee_participants = models.IntegerField(default=0, verbose_name="Government Employee Participants")
+    private_employee_participants = models.IntegerField(default=0, verbose_name="Private Employee Participants")
+    four_ps_participants = models.IntegerField(default=0, verbose_name="4P's Participants")
+    other_participants = models.IntegerField(default=0, verbose_name="Other Participants")
+    
+    # TVL Training Specific Fields
+    solo_parent_participants = models.IntegerField(default=0, verbose_name="Solo Parent Participants (TVL only)")
+    four_ps_members = models.IntegerField(default=0, verbose_name="4P's Members (TVL only)")
+    participants_with_disabilities = models.IntegerField(default=0, verbose_name="Participants with Disabilities (TVL only)")
+    
+    # Training Duration and Weight
+    DURATION_CHOICES = [
+        ('5_plus', '5 or more days (x2.00)'),
+        ('3_to_4', '3 to 4 days (x1.5)'),
+        ('2_days', '2 days (x1.25)'),
+        ('1_day', '1 day (8 hours) (x1.00)'),
+        ('less_than_1', 'Less than 1 day or 8 hours (x0.5)'),
+    ]
+    
+    training_duration = models.CharField(
+        max_length=20,
+        choices=DURATION_CHOICES,
+        verbose_name="Number of Days Trained"
+    )
+    
+    # Survey and Rating Information
+    total_trainees_surveyed = models.IntegerField(verbose_name="Total No. Of Trainees Surveyed")
+    
+    RATING_CHOICES = [(i, str(i)) for i in range(1, 6)]
+    
+    relevance_rating = models.IntegerField(
+        choices=RATING_CHOICES,
+        verbose_name="Client's Rating on Training Relevance"
+    )
+    quality_rating = models.IntegerField(
+        choices=RATING_CHOICES,
+        verbose_name="Client's Rating on Training Quality"
+    )
+    timeliness_rating = models.IntegerField(
+        choices=RATING_CHOICES,
+        verbose_name="Client's Rating on Training Timeliness"
+    )
+    
+    # Request Information
+    total_clients_requesting = models.IntegerField(verbose_name="Total No. of Clients Requesting Trainings")
+    requests_responded_3_days = models.IntegerField(verbose_name="Requests Responded in Next 3 Days")
+    
+    # Financial Information
+    amount_charged_cvsu = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+        verbose_name="Amount Charged to CvSU"
+    )
+    amount_charged_partner = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+        verbose_name="Amount Charged to Partner Agency"
+    )
+    partner_agency_name = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name="Name of Partner Agency"
+    )
+    
+    # Classification
+    sustainable_development_goal = models.ForeignKey(
+        SustainableDevelopmentGoal,
+        on_delete=models.CASCADE,
+        verbose_name="Sustainable Development Goal"
+    )
+    thematic_area = models.ForeignKey(
+        ThematicArea,
+        on_delete=models.CASCADE,
+        verbose_name="Thematic Area"
+    )
+    
+    # Additional Information
+    remarks = models.TextField(blank=True, null=True, verbose_name="Remarks")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    @property
+    def total_participants_by_sex(self):
+        """Calculate total participants by sex"""
+        return self.male_participants + self.female_participants + self.prefer_not_to_say_participants
+    
+    @property
+    def total_participants_by_category(self):
+        """Calculate total participants by category"""
+        return (self.student_participants + self.farmer_participants + 
+                self.fisherfolk_participants + self.ag_technician_participants +
+                self.government_employee_participants + self.private_employee_participants +
+                self.four_ps_participants + self.other_participants)
+    
+    @property
+    def training_weight_multiplier(self):
+        """Get the training weight multiplier based on duration"""
+        weight_map = {
+            '5_plus': 2.00,
+            '3_to_4': 1.5,
+            '2_days': 1.25,
+            '1_day': 1.00,
+            'less_than_1': 0.5,
+        }
+        return weight_map.get(self.training_duration, 1.0)
+    
+    @property
+    def weighted_training_days(self):
+        """Calculate weighted training days"""
+        return self.total_participants_by_sex * self.training_weight_multiplier
+    
+    @property
+    def inclusive_dates(self):
+        """Get formatted inclusive dates"""
+        if self.start_date == self.end_date:
+            return self.start_date.strftime("%B %d, %Y")
+        return f"{self.start_date.strftime('%B %d, %Y')} - {self.end_date.strftime('%B %d, %Y')}"
+    
+    def clean(self):
+        """Model validation"""
+        super().clean()
+        
+        if self.end_date < self.start_date:
+            raise ValidationError("End date cannot be before start date.")
+        
+        # Validate that TVL-specific fields are only used for TVL category
+        if self.category and self.category.category_code != 'TVL':
+            if (self.solo_parent_participants > 0 or 
+                self.four_ps_members > 0 or 
+                self.participants_with_disabilities > 0):
+                raise ValidationError(
+                    "Solo parent, 4P's members, and participants with disabilities "
+                    "fields are only for TVL trainings."
+                )
+    
+    def __str__(self):
+        return f"{self.training_no} - {self.title}"
+    
+    class Meta:
+        db_table = 'tblTraining'
+        ordering = ['-start_date', 'training_no']
+        verbose_name = "Training"
+        verbose_name_plural = "Trainings"
+
+class SupportingDocument(models.Model):
+    """
+    Model to store multiple documents. 
+    """
+    training = models.ForeignKey(
+        'Training',
+        on_delete=models.CASCADE,
+        related_name='supporting_documents',
+        null=True,
+        blank=True
+    )
+
+    extension_ppa_featured = models.ForeignKey(
+        ExtensionPPAFeatured,
+        on_delete=models.CASCADE,
+        related_name='supporting_documents',
+        null=True, # <-- MODIFIED
+        blank=True # <-- MODIFIED
+    )
+    technology = models.ForeignKey( # <-- NEW FOREIGN KEY
+        Technology,
+        on_delete=models.CASCADE,
+        related_name='supporting_documents',
+        null=True,
+        blank=True
+    )
+    student_involvement = models.ForeignKey(
+        StudentExtensionInvolvement,
+        on_delete=models.CASCADE,
+        related_name='supporting_documents',
+        null=True,
+        blank=True
+    )
+    faculty_involvement = models.ForeignKey(
+        'FacultyInvolvement',
+        on_delete=models.CASCADE,
+        related_name='supporting_documents',
+        null=True,
+        blank=True
+    )
+    ordinance = models.ForeignKey(
+        'Ordinance',
+        on_delete=models.CASCADE,
+        related_name='supporting_documents',
+        null=True,
+        blank=True
+    )
+    impact_assessment = models.ForeignKey(
+        'ImpactAssessment', 
+        on_delete=models.CASCADE,
+        related_name='supporting_documents',
+        null=True,
+        blank=True
+    )
+    award = models.ForeignKey(
+        'Awards',
+        on_delete=models.CASCADE, 
+        related_name='supporting_documents',
+        null=True,
+        blank=True
+    )
+    other_activity = models.ForeignKey(
+        'OtherActivities',
+        on_delete=models.CASCADE,
+        related_name='supporting_documents', 
+        null=True,
+        blank=True
+    )   
+    
+    file = models.FileField(upload_to='supporting_documents/')
+    submitter = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True)
+    def __str__(self):
+        if self.training:
+            return f"Document for {self.training.training_no} - {self.training.title}"
+        elif self.extension_ppa_featured:
+            return f"Document for {self.extension_ppa_featured.extension_ppa.ppa_name}"
+        elif self.technology:
+            return f"Document for {self.technology.technology_title}"
+        elif self.student_involvement:
+            return f"Document for {self.student_involvement.department.department_name} - {self.student_involvement.curricular_offering.offering_name}"
+        elif self.faculty_involvement: 
+            return f"Document for {self.faculty_involvement.faculty_staff_name}"
+        elif self.ordinance:
+            return f"Document for {self.ordinance.ordinance_title}"
+        elif self.impact_assessment:
+            return f"Document for Impact Assessment - {self.impact_assessment.department.department_name}"
+        elif self.award:
+            return f"Document for {self.award.award_title} - {self.award.person_received_award}"
+        elif self.other_activity:
+            return f"Document for {self.other_activity.activity_title}"
+        return "Document"
+    
+    def clean(self):
+        # Update validation to include the new field
+        fields_set = sum([
+            bool(self.training),
+            bool(self.extension_ppa_featured),
+            bool(self.technology),
+            bool(self.student_involvement),
+            bool(self.faculty_involvement),
+            bool(self.ordinance),
+            bool(self.impact_assessment),
+            bool(self.award),
+            bool(self.other_activity)
+        ])
+        
+        if fields_set > 1:
+            raise ValidationError("A supporting document can only be linked to one type of record.")
+        if fields_set == 0:
+            raise ValidationError("A supporting document must be linked to a record.")
+
+class FormSubmission(models.Model):
+    """
+    Model to store submitted forms from OJT Coordinators.
+    """
+    # Link the submission to the user who submitted it
+    submitter = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='submissions')
+
+    # Store a reference to which form was submitted (e.g., 'Table 10', 'Table 11')
+    form_name = models.CharField(max_length=100)
+
+    # Store the actual form data. A JSONField is flexible for various forms.
+    form_data = models.JSONField()
+
+    # The date and time the form was submitted
+    submitted_at = models.DateTimeField(default=timezone.now)
+
+    form_instance_id = models.IntegerField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.form_name} submitted by {self.submitter.get_full_name()} on {self.submitted_at.strftime('%Y-%m-%d')}"
+
+    class Meta:
+        ordering = ['-submitted_at']
+

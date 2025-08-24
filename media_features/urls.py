@@ -6,6 +6,7 @@ from . import views
 urlpatterns = [
     # New: This is the URL for the main dashboard listing all forms
     path('', views.reports_dashboard, name='reports_dashboard'),
+    path('table-3-trainings/', views.training_form, name='table_3_form'),
     path('table-8-faculty-involvement/', views.faculty_involvement_form, name='table_8_form'),
     path('table-9-student-involvement/', views.student_involvement_form, name='table_9_form'),
     path('table-10-media-features/', views.media_feature_form, name='table_10_form'),

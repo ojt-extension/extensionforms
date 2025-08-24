@@ -2,7 +2,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import HttpResponse, JsonResponse
-from django.db import transaction 
+from django.db import transaction, connection 
 from django.contrib.auth.decorators import login_required  # <-- Import login_required
 
 from openpyxl import Workbook 
@@ -10,13 +10,14 @@ from openpyxl.styles import Font, Alignment
 from openpyxl.utils import get_column_letter
 
 from .forms import (
-    ExtensionPPAFeaturedForm, TechnologyForm, StudentExtensionInvolvementForm, 
+    TrainingForm, ExtensionPPAFeaturedForm, TechnologyForm, StudentExtensionInvolvementForm, 
     FacultyInvolvementForm, OrdinanceForm, ImpactAssessmentForm, AwardsForm, OtherActivitiesForm
 )
 from .models import (
     ExtensionPPAFeatured, ExtensionPPA, MediaOutlet, SupportingDocument, StudentExtensionInvolvement,
     Technology, Department, CurricularOffering, FormSubmission, FacultyInvolvement,
-    Ordinance, ImpactAssessment, Awards, OtherActivities
+    Ordinance, ImpactAssessment, Awards, OtherActivities, Training, TrainingCategory, 
+    CollaboratingAgency, SustainableDevelopmentGoal, ThematicArea
 )
 import json # Import json to handle the form_data JSONField
 # from your_app_name.models import TechnologyCommercialized # Example for Table 11
@@ -27,6 +28,7 @@ def reports_dashboard(request):
     Renders the main dashboard page with links to all forms.
     """
     forms = [
+        {'name': 'Table 3: Trainings', 'url_name': 'table_3_form'},
         {'name': 'Table 8: Faculty Involvement in ESCE', 'url_name': 'table_8_form'},
         {'name': 'Table 9: Student Involvement in ESCE', 'url_name': 'table_9_form'},
         {'name': 'Table 10: ES Activities Featured Forms', 'url_name': 'table_10_form'},
@@ -38,6 +40,226 @@ def reports_dashboard(request):
         
     ]
     return render(request, 'media_features/dashboard.html', {'forms': forms})
+
+@login_required
+def training_form(request):
+    """
+    Handles the display and submission of the Table 3 Training form.
+    """
+    if request.method == 'POST':
+        form = TrainingForm(request.POST, request.FILES)
+        if form.is_valid():
+            with transaction.atomic():
+                # Save the training instance
+                training_instance = form.save()
+                
+                # Handle file uploads
+                files = request.FILES.getlist('files')
+                document_data = []
+                
+                for file in files:
+                    doc = SupportingDocument.objects.create(
+                        training=training_instance,
+                        file=file,
+                        submitter=request.user
+                    )
+                    document_data.append({
+                        'name': doc.file.name.split('/')[-1],
+                        'url': doc.file.url
+                    })
+                
+                # Prepare form data for FormSubmission
+                form_data_dict = {
+                    'training_no': training_instance.training_no,
+                    'extension_code': training_instance.extension_code,
+                    'lead_department': training_instance.lead_department.department_name,
+                    'contact_person': training_instance.contact_person,
+                    'contact_number_email': training_instance.contact_number_email,
+                    'curricular_offerings': [
+                        offering.offering_name 
+                        for offering in training_instance.curricular_offerings.all()
+                    ],
+                    'collaborating_agencies': [
+                        agency.agency_name 
+                        for agency in training_instance.collaborating_agencies.all()
+                    ],
+                    'training_coordinator': training_instance.training_coordinator,
+                    'project_no': training_instance.project_no,
+                    'category': str(training_instance.category),
+                    'title': training_instance.title,
+                    'inclusive_dates': training_instance.inclusive_dates,
+                    'venue': training_instance.venue,
+                    'total_participants_by_sex': training_instance.total_participants_by_sex,
+                    'total_participants_by_category': training_instance.total_participants_by_category,
+                    'training_duration': training_instance.get_training_duration_display(),
+                    'weighted_training_days': training_instance.weighted_training_days,
+                    'total_trainees_surveyed': training_instance.total_trainees_surveyed,
+                    'ratings': {
+                        'relevance': training_instance.relevance_rating,
+                        'quality': training_instance.quality_rating,
+                        'timeliness': training_instance.timeliness_rating,
+                    },
+                    'total_clients_requesting': training_instance.total_clients_requesting,
+                    'requests_responded_3_days': training_instance.requests_responded_3_days,
+                    'financial_info': {
+                        'amount_charged_cvsu': str(training_instance.amount_charged_cvsu),
+                        'amount_charged_partner': str(training_instance.amount_charged_partner),
+                        'partner_agency_name': training_instance.partner_agency_name,
+                    },
+                    'sustainable_development_goal': str(training_instance.sustainable_development_goal),
+                    'thematic_area': str(training_instance.thematic_area),
+                    'remarks': training_instance.remarks,
+                    'supporting_documents': document_data
+                }
+                
+                # Create FormSubmission record
+                FormSubmission.objects.create(
+                    submitter=request.user,
+                    form_name='Table 3: Training',
+                    form_data=form_data_dict,
+                    form_instance_id=training_instance.pk
+                )
+            
+            messages.success(request, 'Training record added successfully!')
+            return redirect('training_form')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = TrainingForm()
+    
+    # Get existing training records with related data
+    try:
+        trainings = Training.objects.all().order_by('-start_date', 'training_no')
+    except Exception as e:
+        # Fallback to simpler query if complex query fails
+        trainings = Training.objects.all().order_by('-start_date', 'training_no')
+        messages.warning(request, 'Some data may load slowly due to database connection issues.')
+    
+    context = {
+        'form': form,
+        'trainings': trainings
+    }
+    return render(request, 'media_features/table_3_form.html', context)
+
+@login_required
+def get_curricular_offerings_by_department(request):
+    """
+    AJAX endpoint to get curricular offerings for a specific department.
+    """
+    department_id = request.GET.get('department_id')
+    offerings = []
+    
+    if department_id:
+        try:
+            curricular_offerings = CurricularOffering.objects.filter(
+                department_id=department_id
+            ).order_by('offering_name')
+            
+            offerings = [
+                {
+                    'id': offering.curricular_offering_id,
+                    'name': offering.offering_name
+                }
+                for offering in curricular_offerings
+            ]
+        except Exception as e:
+            pass  # Return empty list on error
+    
+    return JsonResponse({'offerings': offerings})
+
+@login_required
+def export_training_excel(request):
+    """
+    Export training records to Excel format.
+    """
+    # Create workbook and worksheet
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = "Table 4 - Training Records"
+    
+    # Define headers
+    headers = [
+        'Training No.', 'Code (Extension)', 'Lead Department', 'Contact Person',
+        'Contact Number/Email', 'Curricular Offerings', 'Collaborating Agencies',
+        'Training Coordinator', 'Project No.', 'Category', 'Title',
+        'Inclusive Dates', 'Venue', 'Male Participants', 'Female Participants',
+        'Total Participants by Category', 'Training Duration', 'Weighted Training Days',
+        'Total Trainees Surveyed', 'Relevance Rating', 'Quality Rating',
+        'Timeliness Rating', 'Total Clients Requesting', 'Requests Responded (3 days)',
+        'Amount Charged CVSU', 'Amount Charged Partner', 'Partner Agency Name',
+        'Sustainable Development Goal', 'Thematic Area', 'Remarks'
+    ]
+    
+    # Write headers
+    for col_num, header in enumerate(headers, 1):
+        cell = worksheet.cell(row=1, column=col_num, value=header)
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(wrap_text=True)
+    
+    # Get training records
+    trainings = Training.objects.select_related(
+        'lead_department', 'category', 'sustainable_development_goal', 'thematic_area'
+    ).prefetch_related('curricular_offerings', 'collaborating_agencies').all()
+    
+    # Write data rows
+    for row_num, training in enumerate(trainings, 2):
+        data = [
+            training.training_no,
+            training.extension_code,
+            training.lead_department.department_name,
+            training.contact_person,
+            training.contact_number_email,
+            ', '.join([offering.offering_name for offering in training.curricular_offerings.all()]),
+            ', '.join([agency.agency_name for agency in training.collaborating_agencies.all()]),
+            training.training_coordinator,
+            training.project_no,
+            str(training.category),
+            training.title,
+            training.inclusive_dates,
+            training.venue,
+            training.total_participants_by_sex.get('male', 0) if training.total_participants_by_sex else 0,
+            training.total_participants_by_sex.get('female', 0) if training.total_participants_by_sex else 0,
+            training.total_participants_by_category,
+            training.get_training_duration_display(),
+            training.weighted_training_days,
+            training.total_trainees_surveyed,
+            training.relevance_rating,
+            training.quality_rating,
+            training.timeliness_rating,
+            training.total_clients_requesting,
+            training.requests_responded_3_days,
+            training.amount_charged_cvsu,
+            training.amount_charged_partner,
+            training.partner_agency_name,
+            str(training.sustainable_development_goal),
+            str(training.thematic_area),
+            training.remarks
+        ]
+        
+        for col_num, cell_value in enumerate(data, 1):
+            worksheet.cell(row=row_num, column=col_num, value=cell_value)
+    
+    # Set column widths
+    for col in worksheet.columns:
+        max_length = 0
+        column = col[0].column_letter
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 50)
+        worksheet.column_dimensions[column].width = adjusted_width
+    
+    # Prepare response
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=training_records.xlsx'
+    
+    workbook.save(response)
+    return response
 
 @login_required
 def media_feature_form(request):
@@ -432,7 +654,9 @@ def export_all_to_excel(request):
         # A utility function to retrieve supporting documents based on the related_name
         # The related name is derived from the model name in lowercase.
         model_name = self.__class__.__name__.lower()
-        if model_name == 'facultyinvolvement':
+        if model_name == 'training':
+            related_name = 'training'
+        elif model_name == 'facultyinvolvement':
             related_name = 'faculty_involvement'
         elif model_name == 'studentextensioninvolvement':
             related_name = 'student_involvement'
@@ -456,6 +680,7 @@ def export_all_to_excel(request):
     def get_curricular_offerings(self):
         return ", ".join([offering.offering_name for offering in self.curricular_offerings.all()])
 
+    Training.add_to_class('supporting_documents_list', get_supporting_documents)
     FacultyInvolvement.add_to_class('supporting_documents_list', get_supporting_documents)
     ExtensionPPAFeatured.add_to_class('supporting_documents_list', get_supporting_documents)
     Technology.add_to_class('supporting_documents_list', get_supporting_documents)
@@ -468,6 +693,74 @@ def export_all_to_excel(request):
 
     # Dictionary defining the tables to export and their configurations
     tables = {
+        'Table 4 - Trainings': {
+            'model': Training,
+            'fields': [
+                'training_no',
+                'extension_code',
+                'lead_department__department_name',
+                'contact_person',
+                'contact_number_email',
+                'curricular_offerings_list',
+                'collaborating_agencies_list',
+                'training_coordinator',
+                'project_no',
+                'category__category_name',
+                'title',
+                'inclusive_dates',
+                'venue',
+                'total_participants_by_sex',
+                'total_participants_by_category',
+                'training_duration',
+                'weighted_training_days',
+                'total_trainees_surveyed',
+                'relevance_rating',
+                'quality_rating',
+                'timeliness_rating',
+                'total_clients_requesting',
+                'requests_responded_3_days',
+                'amount_charged_cvsu',
+                'amount_charged_partner',
+                'partner_agency_name',
+                'sustainable_development_goal__goal_name',
+                'thematic_area__area_name',
+                'remarks',
+                'supporting_documents_list'
+            ],
+            'headers': [
+                'Training No.',
+                'Code (Extension)',
+                'Lead Department',
+                'Contact Person',
+                'Contact Number/Email',
+                'Curricular Offerings',
+                'Collaborating Agencies',
+                'Training Coordinator',
+                'Project No.',
+                'Category',
+                'Title',
+                'Inclusive Dates',
+                'Venue',
+                'Total Participants by Sex',
+                'Total Participants by Category',
+                'Training Duration',
+                'Weighted Training Days',
+                'Total Trainees Surveyed',
+                'Relevance Rating',
+                'Quality Rating',
+                'Timeliness Rating',
+                'Total Clients Requesting',
+                'Requests Responded (3 days)',
+                'Amount Charged CVSU',
+                'Amount Charged Partner',
+                'Partner Agency Name',
+                'Sustainable Development Goal',
+                'Thematic Area',
+                'Remarks',
+                'Supporting Documents'
+            ],
+            'notes': ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '*Supporting documentation for training activities']
+        },
         'Table 8 - Faculty Involvement': {
             'model': FacultyInvolvement,
             'fields': [
